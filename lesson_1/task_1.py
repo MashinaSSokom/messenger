@@ -6,18 +6,18 @@
 """
 print('Задание #1')
 print(20 * '=' + '\n')
-WORDS = ['разработка', 'сокет', 'декоратор']
+words = ['разработка', 'сокет', 'декоратор']
 
-WORDS_IN_UNICODE = ['\u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0430', '\u0441\u043e\u043a\u0435\u0442',
+words_in_unicode = ['\u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0430', '\u0441\u043e\u043a\u0435\u0442',
                     '\u0434\u0435\u043a\u043e\u0440\u0430\u0442\u043e\u0440']
 
 
-def print_value_and_type(words: list):
-    for word in words:
-        print(f'Слово: {word}')
-        print(f'Тип: {type(word)}')
+def print_value_and_type(items: list):
+    for item in items:
+        print(f'Слово: {item}')
+        print(f'Тип: {type(item)}')
         print(10 * '=')
 
 
-print_value_and_type(words=WORDS)
-print_value_and_type(words=WORDS_IN_UNICODE)
+print_value_and_type(items=words)
+print_value_and_type(items=words_in_unicode)
