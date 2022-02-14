@@ -18,3 +18,60 @@ main_data — и поместить в него названия столбцо�
 
 - Проверить работу программы через вызов функции write_to_csv().
 '''
+import csv
+import os
+import re
+from chardet import detect
+
+
+def get_data():
+    os_prod_list = []
+    os_name_list = []
+    os_code_list = []
+    os_type_list = []
+    dir_names_reg = re.compile(r'info.+\.txt')
+    file_names = dir_names_reg.findall(" ".join(os.listdir()))[0].split(' ')
+    for file in file_names:
+        with open(file, 'rb') as f_r:
+            file_b = f_r.read()
+            data = file_b.decode(encoding=detect(file_b)['encoding'])
+
+        os_prod_re = re.compile(r'Изготовитель системы:\s*\w*')
+        os_prod = os_prod_re.findall(data)[0].split()[2]
+        os_prod_list.append(os_prod)
+
+        os_name_re = re.compile(r'Название ОС:\s*.*\S')
+        os_name = " ".join(os_name_re.findall(data)[0].split()[2:])
+        os_name_list.append(os_name)
+
+        os_code_re = re.compile(r'Код продукта:\s*\S*')
+        os_code = os_code_re.findall(data)[0].split()[2]
+        os_code_list.append(os_code)
+
+        os_type_re = re.compile(r'Тип системы:\s*\S*')
+        os_type = os_type_re.findall(data)[0].split()[2]
+        os_type_list.append(os_type)
+
+    main_data = []
+    all_data = [os_prod_list, os_name_list, os_code_list, os_type_list]
+    for idx in range(len(file_names)):
+        line = [row[idx] for row in all_data]
+        main_data.append(line)
+    headers = ['Изготовитель системы', 'Название ОС', 'Код продукта', 'Тип системы']
+    main_data.insert(0, headers)
+
+    return main_data
+
+
+def write_to_csv(filename: str, data: dict):
+    with open('task_1.csv', 'w', encoding='utf-8', newline='') as f:
+        try:
+            csv_writer = csv.writer(f)
+            csv_writer.writerows(data)
+            print(f'Файл успешно создан!')
+        except Exception as e:
+            print(f'Произошла ошибка!\n{e}')
+
+
+write_to_csv('task_1.csv', get_data())
+
