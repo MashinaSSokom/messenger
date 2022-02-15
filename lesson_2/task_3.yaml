@@ -1,0 +1,9 @@
+products:
+- mouse
+- headphones
+- smartphone
+total_price: 3
+products_price:
+  mouse: 50₣
+  headphones: 25₣
+  smartphone: 500₣
