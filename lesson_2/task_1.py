@@ -64,7 +64,7 @@ def get_data():
 
 
 def write_to_csv(filename: str, data: dict):
-    with open('task_1.csv', 'w', encoding='utf-8', newline='') as f:
+    with open(filename, 'w', encoding='utf-8', newline='') as f:
         try:
             csv_writer = csv.writer(f)
             csv_writer.writerows(data)
