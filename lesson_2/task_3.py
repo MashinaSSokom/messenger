@@ -15,7 +15,7 @@ import yaml
 
 test_data = {'products': ['mouse', 'headphones', 'smartphone'],
              'total_price': 3,
-             'products_price': {'mouse': '50$', 'headphones': '25$', 'smartphone': '500$'}}
+             'products_price': {'mouse': '50₣', 'headphones': '25₣', 'smartphone': '500₣'}}
 
 
 def write_to_yaml(data):
