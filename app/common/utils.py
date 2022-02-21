@@ -25,4 +25,4 @@ def get_message(socket):
 def send_message(socket, message):
     json_message = json.dumps(message)
     encoded_message = json_message.encode(ENCODING)
-    socket.recv(encoded_message)
+    socket.send(encoded_message)
