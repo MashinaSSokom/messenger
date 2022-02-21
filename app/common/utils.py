@@ -1,13 +1,13 @@
 import argparse
 import json
 
-from app.common.variables import MAX_PACKAGE_LENGTH, ENCODING
+from common.variables import MAX_PACKAGE_LENGTH, ENCODING
 
 
 def create_argv_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', nargs='?')
-    parser.add_argument('-p', nargs='?')
+    parser.add_argument('-p', type=int, nargs='?')
     return parser
 
 
