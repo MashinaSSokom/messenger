@@ -1,11 +1,9 @@
-import sys
-
-print(sys.path)
 from socket import socket, AF_INET, SOCK_STREAM
 import time
 from common.utils import create_argv_parser, get_message, send_message
 from common.variables import DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, TIME, USER, ACCOUNT_NAME, PRESENCE, RESPONSE, \
     ERROR
+
 
 def create_presence(account_name='Guest'):
     return {
