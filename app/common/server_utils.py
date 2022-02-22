@@ -2,7 +2,10 @@ from app.common.variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TI
 
 
 def process_client_message(message):
-    if [USER, ACTION, TIME].sort() == list(message.keys()).sort() and message[ACTION] == PRESENCE \
+    sorted_message_keys = sorted(list(message.keys()))
+    sorted_keys = sorted([USER, ACTION, TIME])
+
+    if sorted_keys == sorted_message_keys and message[ACTION] == PRESENCE\
             and message[USER][ACCOUNT_NAME]:
         return {
             RESPONSE: 200
