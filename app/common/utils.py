@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from common.variables import MAX_PACKAGE_LENGTH, ENCODING
+from app.common.variables import MAX_PACKAGE_LENGTH, ENCODING
 
 
 def create_argv_parser():
@@ -18,8 +18,8 @@ def get_message(socket):
         response = json.loads(json_response)
         if isinstance(response, dict):
             return response
-        return ValueError
-    return ValueError
+        raise ValueError
+    raise ValueError
 
 
 def send_message(socket, message):

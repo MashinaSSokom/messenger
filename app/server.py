@@ -1,7 +1,9 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import time
-from common.utils import create_argv_parser, get_message, send_message
-from common.variables import DEFAULT_PORT, ACTION, TIME, USER, ACCOUNT_NAME, PRESENCE, RESPONSE, ERROR
+
+from app.common.server_utils import process_client_message
+from app.common.utils import create_argv_parser, get_message, send_message
+from app.common.variables import DEFAULT_PORT
 
 parser = create_argv_parser()
 namespace = parser.parse_args()
@@ -14,19 +16,6 @@ if not namespace.a:
 SERV_SOCK = socket(AF_INET, SOCK_STREAM)
 SERV_SOCK.bind((namespace.a, namespace.p))
 SERV_SOCK.listen(5)
-
-
-def process_client_message(message):
-    if [USER, ACTION, TIME].sort() == list(message.keys()).sort() and message[ACTION] == PRESENCE \
-            and message[USER][ACCOUNT_NAME]:
-        return {
-            RESPONSE: 200
-        }
-    return {
-        RESPONSE: 400,
-        ERROR: 'Bad request'
-    }
-
 
 try:
     while True:

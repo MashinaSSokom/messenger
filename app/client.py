@@ -1,25 +1,9 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import time
-from common.utils import create_argv_parser, get_message, send_message
-from common.variables import DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, TIME, USER, ACCOUNT_NAME, PRESENCE, RESPONSE, \
-    ERROR
 
-
-def create_presence(account_name='Guest'):
-    return {
-        ACTION: PRESENCE,
-        TIME: time.time(),
-        USER: {ACCOUNT_NAME: account_name}
-    }
-
-
-def process_response(response):
-    if RESPONSE in response:
-        if response[RESPONSE] == 200:
-            return f'200: OK'
-        return f'400: {response[ERROR]}'
-    return ValueError
-
+from app.common.client_utils import create_presence, process_response
+from app.common.utils import create_argv_parser, get_message, send_message
+from app.common.variables import DEFAULT_PORT, DEFAULT_IP_ADDRESS
 
 parser = create_argv_parser()
 namespace = parser.parse_args()
