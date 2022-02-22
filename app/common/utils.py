@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from common.variables import MAX_PACKAGE_LENGTH, ENCODING
+from app.common.variables import MAX_PACKAGE_LENGTH, ENCODING
 
 
 def create_argv_parser():
