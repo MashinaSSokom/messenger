@@ -46,6 +46,10 @@ class TestUtilsClass(unittest.TestCase):
         test_socket_ok_resp = TestSocket(self.ok_response)
         self.assertEqual(get_message(test_socket_ok_resp), self.ok_response)
 
+    def test_get_message_raise_value_error(self):
+        test_socket_ok_resp = TestSocket("Not dict")
+        self.assertRaises(ValueError, get_message, test_socket_ok_resp)
+
     def test_get_message_bad_response(self):
         test_socket_bad_resp = TestSocket(self.bad_response)
         self.assertEqual(get_message(test_socket_bad_resp), self.bad_response)
