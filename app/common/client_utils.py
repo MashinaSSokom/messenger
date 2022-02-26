@@ -1,6 +1,6 @@
 import time
 
-from app.common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
+from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
 
 
 def create_presence(account_name='Guest'):

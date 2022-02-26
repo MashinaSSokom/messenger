@@ -1,4 +1,4 @@
-from app.common.variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TIME, PRESENCE
+from .variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TIME, PRESENCE
 
 
 def process_client_message(message):

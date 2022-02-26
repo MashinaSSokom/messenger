@@ -1,9 +1,9 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import time
 
-from app.common.server_utils import process_client_message
-from app.common.utils import create_argv_parser, get_message, send_message
-from app.common.variables import DEFAULT_PORT
+from common.server_utils import process_client_message
+from common.utils import create_argv_parser, get_message, send_message
+from common.variables import DEFAULT_PORT
 
 parser = create_argv_parser()
 namespace = parser.parse_args()
