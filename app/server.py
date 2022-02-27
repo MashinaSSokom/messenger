@@ -7,7 +7,7 @@ from common.server_utils import process_client_message
 from common.utils import create_argv_parser, get_message, send_message
 from common.variables import DEFAULT_PORT
 from errors import IncorrectDataRecivedError
-from logs import config_client_log
+from logs import config_server_log
 
 logger = logging.getLogger('server_logger')
 
@@ -32,7 +32,7 @@ try:
         CLIENT_SOCK, ADDR = SERV_SOCK.accept()
         print(f'Получен запрос на коннект с {ADDR}')
 
-        logger.info(f'Установлено соедение с ПК {ADDR}')
+        logger.error(f'Установлено соедение с ПК {ADDR}')
         try:
             message = get_message(CLIENT_SOCK)
             response = process_client_message(message)

@@ -2,7 +2,7 @@ import time
 import logging
 
 from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
-from ..logs import config_client_log
+# from ..logs import config_client_log
 
 logger = logging.getLogger('client_logger')
 

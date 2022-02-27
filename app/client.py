@@ -36,8 +36,7 @@ except json.JSONDecodeError:
     logger.error('Не удалось декодировать полученную Json строку.')
 except ReqFieldMissingError as missing_error:
     logger.error(f'В ответе сервера отсутствует необходимое поле '
-                        f'{missing_error.missing_field}')
+                 f'{missing_error.missing_field}')
 except ConnectionRefusedError:
     logger.critical(f'Не удалось подключиться к серверу {namespace.a}:{namespace.p}, '
-                           f'конечный компьютер отверг запрос на подключение.')
-
+                    f'конечный компьютер отверг запрос на подключение.')

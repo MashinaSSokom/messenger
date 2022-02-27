@@ -1,9 +1,9 @@
 import logging
 
 from .variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TIME, PRESENCE
-from ..logs import config_client_log
+# from ..logs import config_client_log
 
-logger = logging.getLogger('server_loger')
+logger = logging.getLogger('server_logger')
 
 
 def process_client_message(message):
