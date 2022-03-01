@@ -2,8 +2,8 @@ import sys
 import time
 import unittest
 
-from app.common.client_utils import create_presence, process_response
-from app.common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
+from ..common.client_utils import create_presence, process_response
+from ..common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
 
 
 class TestClientUtilsClass(unittest.TestCase):

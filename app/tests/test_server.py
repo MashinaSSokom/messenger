@@ -1,7 +1,7 @@
 import time
 import unittest
-from app.common.server_utils import process_client_message
-from app.common.variables import RESPONSE, ERROR, ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME
+from ..common.server_utils import process_client_message
+from ..common.variables import RESPONSE, ERROR, ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME
 
 
 class TestServerClass(unittest.TestCase):
