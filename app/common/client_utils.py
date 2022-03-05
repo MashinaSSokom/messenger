@@ -1,12 +1,15 @@
 import time
 import logging
 
+from .logger import log
 from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR
+
 # from ..logs import config_client_log
 
 logger = logging.getLogger('client_logger')
 
 
+@log
 def create_presence(account_name='Guest'):
     presence = {
         ACTION: PRESENCE,
@@ -17,6 +20,7 @@ def create_presence(account_name='Guest'):
     return presence
 
 
+@log
 def process_response(response):
     logger.debug(f'Разбор ответа от сервера: {response}')
     if RESPONSE in response:
