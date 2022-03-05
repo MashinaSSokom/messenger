@@ -1,9 +1,10 @@
 import argparse
 import json
-
+from .logger import log
 from .variables import MAX_PACKAGE_LENGTH, ENCODING
 
 
+@log
 def create_argv_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', nargs='?')
@@ -11,6 +12,7 @@ def create_argv_parser():
     return parser
 
 
+@log
 def get_message(socket):
     encoded_message = socket.recv(MAX_PACKAGE_LENGTH)
     if isinstance(encoded_message, bytes):
