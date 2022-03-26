@@ -3,7 +3,7 @@ import json
 import time
 
 from .logger import log
-from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE
+from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE, USER
 from .errors import IncorrectDataRecivedError
 
 
@@ -12,6 +12,7 @@ def create_argv_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', nargs='?')
     parser.add_argument('-p', type=int, nargs='?')
+    parser.add_argument('-m', default='listen', nargs='?')
     return parser
 
 
@@ -38,7 +39,7 @@ def send_message(socket, message):
 def create_message_to_send(account_name, message_text):
     message = {
         ACTION: MESSAGE,
-        ACCOUNT_NAME: account_name,
+        USER: {ACCOUNT_NAME:account_name},
         TIME: time.time(),
         MESSAGE_TEXT: message_text
     }

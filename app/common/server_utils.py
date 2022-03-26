@@ -14,9 +14,9 @@ def process_client_message(message, client, messages=[]):
     logger.debug(f'Обработка сообщения от клиента : {message}')
 
     sorted_message_keys = sorted(list(message.keys()))
-    sorted_keys = sorted([USER, ACTION, TIME])
-
-    if sorted_keys == sorted_message_keys and message[USER][ACCOUNT_NAME]:
+    sorted_keys1 = sorted([USER, ACTION, TIME])
+    sorted_keys2 = sorted([USER, ACTION, TIME, MESSAGE_TEXT])
+    if (sorted_keys1 == sorted_message_keys or sorted_keys2 == sorted_message_keys) and message[USER][ACCOUNT_NAME]:
         if message[ACTION] == PRESENCE:
 
             send_message(client, {
@@ -25,7 +25,7 @@ def process_client_message(message, client, messages=[]):
             return
 
         elif message[ACTION] == MESSAGE and MESSAGE_TEXT in message:
-            messages.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT]))
+            messages.append((message[USER][ACCOUNT_NAME], message[MESSAGE_TEXT]))
             return
 
     send_message(client, {
