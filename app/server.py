@@ -7,11 +7,12 @@ from common.server_utils import process_client_message
 from common.utils import create_argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT
 from app.common.errors import IncorrectDataRecivedError
+from logs import config_server_log
+
+logger = logging.getLogger('server_logger')
 
 
 def main():
-    logger = logging.getLogger('server_logger')
-
     parser = create_argv_parser()
     namespace = parser.parse_args()
 
@@ -26,7 +27,6 @@ def main():
         serv_sock.listen(MAX_CONNECTIONS)
         serv_sock.settimeout(SERVER_TIMEOUT)
 
-        print(logger)
         logger.info(f'Запущен сервер, порт для подключений: {namespace.p}, '
                     f'адрес с которого принимаются подключения: {namespace.a}. '
                     f'Если адрес не указан, принимаются соединения с любых адресов.')
@@ -42,7 +42,7 @@ def main():
             except OSError:
                 pass
             else:
-                logger.debug(f'Установлено соедение с ПК {addr}')
+                logger.info(f'Установлено соедение с ПК {addr}')
                 clients.append(client_sock)
 
             recv_data_lst = []
@@ -57,19 +57,16 @@ def main():
 
             if recv_data_lst:
                 for client in recv_data_lst:
-                    print(client)
                     try:
                         process_client_message(get_message(client), client, messages)
-
-                    # except IncorrectDataRecivedError:
-                    #     logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
-                    #                  f'Соединение закрывается.')
-                    #     clients.remove(client)
-                    # except json.JSONDecodeError:
-                    #     logger.error(f'Не удалось декодировать JSON строку, полученную от '
-                    #                  f'клиента {client.getpeername()}. Соединение закрывается.')
-                    #     clients.remove(client)
-
+                    except IncorrectDataRecivedError:
+                        logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
+                                     f'Соединение закрывается.')
+                        clients.remove(client)
+                    except json.JSONDecodeError:
+                        logger.error(f'Не удалось декодировать JSON строку, полученную от '
+                                     f'клиента {client.getpeername()}. Соединение закрывается.')
+                        clients.remove(client)
                     except Exception:
                         logger.error(f'Не удалось обработать сообщение: {client.getpeername()} отключился от '
                                      f'сервера!')
