@@ -1,4 +1,4 @@
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import time
 import logging
 import json
@@ -20,6 +20,7 @@ if not namespace.a:
     namespace.a = ''
 
 SERV_SOCK = socket(AF_INET, SOCK_STREAM)
+SERV_SOCK.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 SERV_SOCK.bind((namespace.a, namespace.p))
 SERV_SOCK.listen(5)
 
@@ -32,7 +33,7 @@ try:
         CLIENT_SOCK, ADDR = SERV_SOCK.accept()
         print(f'Получен запрос на коннект с {ADDR}')
 
-        logger.error(f'Установлено соедение с ПК {ADDR}')
+        logger.debug(f'Установлено соедение с ПК {ADDR}')
         try:
             message = get_message(CLIENT_SOCK)
             response = process_client_message(message)
