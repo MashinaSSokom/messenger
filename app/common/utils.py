@@ -1,7 +1,10 @@
 import argparse
 import json
+import time
+
 from .logger import log
-from .variables import MAX_PACKAGE_LENGTH, ENCODING
+from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE
+from .errors import IncorrectDataRecivedError
 
 
 @log
@@ -20,11 +23,23 @@ def get_message(socket):
         response = json.loads(json_response)
         if isinstance(response, dict):
             return response
-        raise ValueError
-    raise ValueError
+        raise IncorrectDataRecivedError
+    raise IncorrectDataRecivedError
 
 
+@log
 def send_message(socket, message):
     json_message = json.dumps(message)
     encoded_message = json_message.encode(ENCODING)
     socket.send(encoded_message)
+
+
+@log
+def create_message_to_send(account_name, message_text):
+    message = {
+        ACTION: MESSAGE,
+        ACCOUNT_NAME: account_name,
+        TIME: time.time(),
+        MESSAGE_TEXT: message_text
+    }
+    return message
