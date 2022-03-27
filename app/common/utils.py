@@ -1,7 +1,10 @@
 import argparse
 import json
+import time
+
 from .logger import log
-from .variables import MAX_PACKAGE_LENGTH, ENCODING
+from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE, USER
+from .errors import IncorrectDataRecivedError
 
 
 @log
@@ -9,6 +12,7 @@ def create_argv_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', nargs='?')
     parser.add_argument('-p', type=int, nargs='?')
+    parser.add_argument('-m', default='listen', nargs='?')
     return parser
 
 
@@ -20,11 +24,23 @@ def get_message(socket):
         response = json.loads(json_response)
         if isinstance(response, dict):
             return response
-        raise ValueError
-    raise ValueError
+        raise IncorrectDataRecivedError
+    raise IncorrectDataRecivedError
 
 
+@log
 def send_message(socket, message):
     json_message = json.dumps(message)
     encoded_message = json_message.encode(ENCODING)
     socket.send(encoded_message)
+
+
+@log
+def create_message_to_send(account_name, message_text):
+    message = {
+        ACTION: MESSAGE,
+        USER: {ACCOUNT_NAME:account_name},
+        TIME: time.time(),
+        MESSAGE_TEXT: message_text
+    }
+    return message
