@@ -15,13 +15,13 @@ while True:
     if ACTION == 'q':
         break
     elif ACTION == 's':
-        PROCESS.append(subprocess.Popen('python app/server.py',
+        PROCESS.append(subprocess.Popen('python server.py',
                                         creationflags=subprocess.CREATE_NEW_CONSOLE))
         for i in range(1):
-            PROCESS.append(subprocess.Popen('python app/client.py -m send',
+            PROCESS.append(subprocess.Popen('python client.py -m send',
                                             creationflags=subprocess.CREATE_NEW_CONSOLE))
         for i in range(3):
-            PROCESS.append(subprocess.Popen('python app/client.py -m listen',
+            PROCESS.append(subprocess.Popen('python client.py -m listen',
                                             creationflags=subprocess.CREATE_NEW_CONSOLE))
     elif ACTION == 'x':
         while PROCESS:
