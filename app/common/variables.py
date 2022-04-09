@@ -20,4 +20,18 @@ MESSAGE = 'message'
 MESSAGE_TEXT = 'mess_text'
 RESPONSE = 'response'
 ERROR = 'error'
+DESTINATION = 'destination'
+SENDER = 'sender'
+EXIT = 'exit'
 RESPONSE_DEFAULT_IP_ADDRESS = 'response_default_ip_address'
+
+# Default responses
+
+RESPONSE_200 = {
+    RESPONSE: 200
+}
+
+RESPONSE_400 = {
+    RESPONSE: 400,
+    ERROR: 'Bad request'
+}
