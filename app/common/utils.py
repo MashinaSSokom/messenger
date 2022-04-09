@@ -12,7 +12,7 @@ def create_argv_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', nargs='?')
     parser.add_argument('-p', type=int, nargs='?')
-    parser.add_argument('-m', default='listen', nargs='?')
+    parser.add_argument('-n', nargs='?')
     return parser
 
 
