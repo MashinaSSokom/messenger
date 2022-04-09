@@ -18,8 +18,11 @@ def process_client_message(message: dict, client: socket, messages: list, client
 
     # Checking compliance with JIM
     sorted_message_keys = sorted(list(message.keys()))
-    sorted_keys1 = sorted([USER, ACTION, TIME])
-    sorted_keys2 = sorted([USER, ACTION, TIME, MESSAGE_TEXT])
+    sorted_keys1 = sorted([USER, ACTION, TIME, SENDER])
+    sorted_keys2 = sorted([USER, ACTION, TIME, MESSAGE_TEXT, DESTINATION, SENDER])
+    logger.debug(
+        (sorted_keys1 == sorted_message_keys or sorted_keys2 == sorted_message_keys) and message[USER][ACCOUNT_NAME] \
+        and message[TIME])
     if (sorted_keys1 == sorted_message_keys or sorted_keys2 == sorted_message_keys) and message[USER][ACCOUNT_NAME] \
             and message[TIME]:
         if message[ACTION] == PRESENCE:
@@ -34,7 +37,7 @@ def process_client_message(message: dict, client: socket, messages: list, client
                 client.close()
             return
         elif message[ACTION] == MESSAGE and MESSAGE_TEXT in message and DESTINATION in message and SENDER in message:
-            messages.append((message[USER][ACCOUNT_NAME], message[MESSAGE_TEXT]))
+            messages.append(message)
             return
         elif message[ACTION] == EXIT:
             clients.remove(client)
