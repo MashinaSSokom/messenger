@@ -1,23 +1,40 @@
+import json
+import socket
 import time
 import logging
 import sys
 
 from .logger import log
-from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT
-
+from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, EXIT, SENDER,\
+    DESTINATION
+from .utils import get_message, send_message
+from .errors import IncorrectDataRecivedError
 # from ..logs import config_client_log
 
 logger = logging.getLogger('client_logger')
 
 
 @log
-def create_presence(account_name='Guest'):
+def create_presence(client_name):
     presence = {
         ACTION: PRESENCE,
         TIME: time.time(),
-        USER: {ACCOUNT_NAME: account_name}
+        SENDER: client_name,
+        USER: {ACCOUNT_NAME: client_name}
     }
-    logger.debug(f'Сформировано {PRESENCE} сообщение для пользователя {account_name}')
+    logger.debug(f'Сформировано {PRESENCE} сообщение для пользователя {client_name}')
+    return presence
+
+
+@log
+def create_exit_message(client_name):
+    presence = {
+        ACTION: EXIT,
+        TIME: time.time(),
+        SENDER: client_name,
+        USER: {ACCOUNT_NAME: client_name}
+    }
+    logger.debug(f'Сформировано {EXIT} сообщение для пользователя {client_name}')
     return presence
 
 
@@ -32,34 +49,79 @@ def process_response(response):
 
 
 @log
-def create_message(sock, account_name='Guest'):
+def create_message(sock, client_name):
     """Функция запрашивает текст сообщения и возвращает его.
     Так же завершает работу при вводе подобной комманды
     """
-    message = input('Введите сообщение для отправки или \'!!!\' для завершения работы: ')
-    if message == '!!!':
-        sock.close()
-        logger.info('Завершение работы по команде пользователя.')
-        print('Спасибо за использование нашего сервиса!')
-        sys.exit(0)
+    destination = input('Введите имя получателя: ')
+    message = input('Введите сообщение: ')
     message_dict = {
         ACTION: MESSAGE,
         TIME: time.time(),
-        USER: {ACCOUNT_NAME: account_name},
+        USER: {ACCOUNT_NAME: client_name},
+        SENDER: client_name,
+        DESTINATION: destination,
         MESSAGE_TEXT: message
     }
-    logger.debug(f'Сформирован словарь сообщения: {message_dict}')
+    logger.debug(f'Пользователем {client_name} сформирован словарь сообщения: {message_dict}')
     return message_dict
 
 
 @log
-def message_from_server(message):
-    """Функция - обработчик сообщений других пользователей, поступающих с сервера"""
-    if ACTION in message and message[ACTION] == MESSAGE and \
-            USER in message and MESSAGE_TEXT in message:
-        print(f'Получено сообщение от пользователя '
-              f'{message[USER][ACCOUNT_NAME]}:\n{message[MESSAGE_TEXT]}')
-        logger.info(f'Получено сообщение от пользователя '
-                    f'{message[USER]}:\n{message[MESSAGE_TEXT]}')
-    else:
-        logger.error(f'Получено некорректное сообщение с сервера: {message}')
+def receive_message_from_server(client_socket: socket.socket, client_name: str):
+    while True:
+        try:
+            message = get_message(client_socket)
+            sorted_message_keys = sorted(list(message.keys()))
+            sorted_keys = sorted([USER, ACTION, TIME, SENDER, DESTINATION, MESSAGE_TEXT])
+            logger.debug(sorted_message_keys)
+            logger.debug(sorted_keys)
+            if sorted_keys == sorted_message_keys:
+                if message[DESTINATION] == client_name:
+                    print(f'\nПолучено сообщение от пользователя {message[SENDER]}:\n'
+                          f'{message[MESSAGE_TEXT]}\n')
+                    logger.info(f'Клиент {client_name} получил сообщение от {message[SENDER]}')
+            else:
+                print(f'Ошибка: {message[ERROR]}')
+                logger.error(f'{client_name} - получено некооректное сообщение: {message}')
+        except IncorrectDataRecivedError:
+            logger.error(f'Не удалось декодировать полученное сообщение.')
+        except (OSError, ConnectionError, ConnectionAbortedError,
+                ConnectionResetError, json.JSONDecodeError):
+            print(f'Потеряно соединение с сервером :( \n '
+                  f'Выход из программы...')
+            logger.critical(f'{client_name} - потеряно соединение с сервером!')
+            time.sleep(1)
+            break
+
+
+def print_user_hint():
+    print(f'Поддерживаемые команды: \n'
+          f'message - отправить сообщение (получатель и текст сообщения будут запрошены отдельно)\n'
+          f'help - показать подсказку\n'
+          f'exit - выйти из программы\n')
+
+
+@log
+def user_interface(client_socket: socket.socket, client_name: str):
+    print_user_hint()
+    while True:
+        command = input(f'Введите команду (подсказка - help): ')
+        if command == MESSAGE:
+            message = create_message(client_socket, client_name)
+            send_message(client_socket, message)
+        elif command == EXIT:
+            send_message(client_socket, create_exit_message(client_name))
+            print(f'Выход из программы...')
+            logger.info(f'Клиент {client_name} вышел из программы')
+            time.sleep(1)
+            break
+        elif command == 'help':
+            print_user_hint()
+        else:
+            print('Некорректный ввод, попробойте снова... Чтобы получить подсказку, используется команду help.\n')
+
+
+
+
+#TODO: исправить дублирование SENDER и USER (оставить SENDER)
