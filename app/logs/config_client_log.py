@@ -16,7 +16,7 @@ file_handler.setLevel(logging.DEBUG)
 
 stream_handler = logging.StreamHandler(stream=sys.stderr)
 stream_handler.setFormatter(client_log_formatter)
-stream_handler.setLevel(logging.ERROR)
+stream_handler.setLevel(logging.CRITICAL)
 
 logger = logging.getLogger('client_logger')
 logger.addHandler(file_handler)
