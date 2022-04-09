@@ -37,6 +37,9 @@ def main():
                     f'адрес с которого принимаются подключения: {namespace.a}. '
                     f'Если адрес не указан, принимаются соединения с любых адресов.')
 
+        print(f'Сервер запущен!\n'
+              f'Данные для подключения: {namespace.a if  namespace.a else "127.0.0.1" }:{namespace.p}')
+
         clients = []
         messages = []
         client_names = {}
@@ -67,7 +70,7 @@ def main():
             if recv_data_lst:
                 for client in recv_data_lst:
                     try:
-                        process_client_message(get_message(client), client, messages)
+                        process_client_message(get_message(client), client, messages, clients, client_names)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
@@ -91,16 +94,6 @@ def main():
                         clients.remove(client_names[message[DESTINATION]])
                         del client_names[message[DESTINATION]]
                 messages.clear()
-                # response = create_message_to_send(account_name=messages[0][0], message_text=messages[0][1])
-                # del messages[0]
-                # for waiting_client in send_data_lst:
-                #     try:
-                #         send_message(waiting_client, response)
-                #     except Exception:
-                #         logger.error(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
-                #         waiting_client.close()
-                #         clients.remove(waiting_client)
-
 
 if __name__ == '__main__':
     main()
