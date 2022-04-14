@@ -7,7 +7,7 @@ import json
 from typing import Dict
 
 from common.server_utils import process_client_message, process_sending_message
-from common.utils import create_argv_parser, get_message, send_message, create_message_to_send
+from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
 from app.common.errors import IncorrectDataRecivedError
 from logs import config_server_log
@@ -18,27 +18,24 @@ logger = logging.getLogger('server_logger')
 
 def main():
     # Parse launch params
-    parser = create_argv_parser()
-    namespace = parser.parse_args()
+    arguments = argv_parser()
 
-    if not namespace.p:
-        namespace.p = DEFAULT_PORT
-    if not namespace.a:
-        namespace.a = ''
+    address = arguments['address']
+    port = arguments['port']
 
     # launch server socket
     with socket(AF_INET, SOCK_STREAM) as serv_sock:
         serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  # Reuse socket if it's busy
-        serv_sock.bind((namespace.a, namespace.p))
+        serv_sock.bind((address, port))
         serv_sock.listen(MAX_CONNECTIONS)
         serv_sock.settimeout(SERVER_TIMEOUT)
 
-        logger.info(f'Запущен сервер, порт для подключений: {namespace.p}, '
-                    f'адрес с которого принимаются подключения: {namespace.a}. '
+        logger.info(f'Запущен сервер, порт для подключений: {port}, '
+                    f'адрес с которого принимаются подключения: {address}. '
                     f'Если адрес не указан, принимаются соединения с любых адресов.')
 
         print(f'Сервер запущен!\n'
-              f'Данные для подключения: {namespace.a if  namespace.a else "127.0.0.1" }:{namespace.p}')
+              f'Данные для подключения: {address if  address else "127.0.0.1" }:{port}')
 
         clients = []
         messages = []

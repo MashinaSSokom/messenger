@@ -11,7 +11,7 @@ from logs import config_client_log
 from common.client_utils import create_presence, process_response, \
     receive_message_from_server, user_interface
 
-from common.utils import create_argv_parser, get_message, send_message
+from common.utils import argv_parser, get_message, send_message
 from common.variables import DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from common.errors import ReqFieldMissingError
 
@@ -19,27 +19,19 @@ logger = logging.getLogger('client_logger')
 
 
 def main():
-    parser = create_argv_parser()
-    namespace = parser.parse_args()
+    arguments = argv_parser()
 
-    if not namespace.p:
-        namespace.p = DEFAULT_PORT
-    if not namespace.a:
-        namespace.a = DEFAULT_IP_ADDRESS
-    if namespace.n:
-        client_name = namespace.n
-    else:
-        client_name = input('Введите имя пользователя: ')
-
-
+    address = arguments['address']
+    port = arguments['port']
+    client_name = arguments['client_name'] if arguments['client_name'] else input('Введите имя пользователя: ')
 
     logger.info(
-        f'Запущен клиент с парамертами: адрес сервера - {namespace.a}, '
-        f'порт - {namespace.p}, имя пользователя: {client_name}')
+        f'Запущен клиент с парамертами: адрес сервера - {address}, '
+        f'порт - {port}, имя пользователя: {client_name}')
 
     try:
         client_socket = socket(AF_INET, SOCK_STREAM)
-        client_socket.connect((namespace.a, namespace.p))
+        client_socket.connect((address, port))
 
         send_message(client_socket, create_presence(client_name))
 
@@ -47,7 +39,7 @@ def main():
         logger.info(f'Клиент {client_name} получил от сервера сообщение {response}')
         result = process_response(response)
 
-        logger.info(f'Клиент {client_name}({namespace.a}: {namespace.p}) подключился к серверу с овтетом: {result}')
+        logger.info(f'Клиент {client_name}({address}: {port}) подключился к серверу с овтетом: {result}')
         print(f'Установлено соединение с сервером. Ответ сервера - {result}')
         print(f'Добро пожаловать, {client_name}! Консольный мессенджер готов к работе ^_^')
 
@@ -61,7 +53,7 @@ def main():
         print('Произошла ошибка, перезапустите приложение!')
         sys.exit(1)
     except (ConnectionRefusedError, ConnectionError):
-        logger.critical(f'Не удалось подключиться к серверу {namespace.a}:{namespace.p}, '
+        logger.critical(f'Не удалось подключиться к серверу {address}:{port}, '
                         f'конечный компьютер отверг запрос на подключение.')
         print('Не удалось подключиться к серверу!')
         sys.exit(1)
@@ -76,7 +68,7 @@ def main():
         client_interface.daemon = True
         client_interface.start()
 
-        logger.debug(f'Клиент {client_name}({namespace.a}: {namespace.p}) завершил запуск процессов')
+        logger.debug(f'Клиент {client_name}({address}: {port}) завершил запуск процессов')
 
         # watchdog cycle
         while True:
