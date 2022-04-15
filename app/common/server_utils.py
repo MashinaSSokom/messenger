@@ -20,9 +20,7 @@ def process_client_message(message: dict, client: socket, messages: list, client
     sorted_message_keys = sorted(list(message.keys()))
     sorted_keys1 = sorted([USER, ACTION, TIME, SENDER])
     sorted_keys2 = sorted([USER, ACTION, TIME, MESSAGE_TEXT, DESTINATION, SENDER])
-    logger.debug(
-        (sorted_keys1 == sorted_message_keys or sorted_keys2 == sorted_message_keys) and message[USER][ACCOUNT_NAME] \
-        and message[TIME])
+
     if (sorted_keys1 == sorted_message_keys or sorted_keys2 == sorted_message_keys) and message[USER][ACCOUNT_NAME] \
             and message[TIME]:
         if message[ACTION] == PRESENCE:
