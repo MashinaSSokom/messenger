@@ -16,6 +16,7 @@ from common.errors import ReqFieldMissingError
 
 logger = logging.getLogger('client_logger')
 
+
 class Client:
 
     def __init__(self, address, port, client_name):
