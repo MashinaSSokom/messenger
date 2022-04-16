@@ -11,12 +11,13 @@ from common.utils import argv_parser, get_message, send_message, create_message_
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
 from app.common.errors import IncorrectDataRecivedError
 from logs import config_server_log
+from metaclasses import ServerVerifier
 
 # Logger initialization
 logger = logging.getLogger('server_logger')
 
 
-class Server:
+class Server(metaclass=ServerVerifier):
 
     def __init__(self, address, port):
         self._port = port
