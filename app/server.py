@@ -7,7 +7,7 @@ import json
 from typing import Dict
 
 from common.server_utils import process_client_message, process_sending_message
-from common.utils import create_argv_parser, get_message, send_message, create_message_to_send
+from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
 from app.common.errors import IncorrectDataRecivedError
 from logs import config_server_log
@@ -16,33 +16,33 @@ from logs import config_server_log
 logger = logging.getLogger('server_logger')
 
 
-def main():
-    # Parse launch params
-    parser = create_argv_parser()
-    namespace = parser.parse_args()
+class Server:
 
-    if not namespace.p:
-        namespace.p = DEFAULT_PORT
-    if not namespace.a:
-        namespace.a = ''
+    def __init__(self, address, port):
+        self._port = port
+        self._address = address
+        self._clients = []
+        self._messages = []
+        self._client_names = {}
 
-    # launch server socket
-    with socket(AF_INET, SOCK_STREAM) as serv_sock:
+    def _connect(self):
+        serv_sock = socket(AF_INET, SOCK_STREAM)
         serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  # Reuse socket if it's busy
-        serv_sock.bind((namespace.a, namespace.p))
+        serv_sock.bind((self._address, self._port))
         serv_sock.listen(MAX_CONNECTIONS)
         serv_sock.settimeout(SERVER_TIMEOUT)
+        return serv_sock
 
-        logger.info(f'Запущен сервер, порт для подключений: {namespace.p}, '
-                    f'адрес с которого принимаются подключения: {namespace.a}. '
+    def run(self):
+
+        serv_sock = self._connect()
+        logger.info(f'Запущен сервер, порт для подключений: {self._port}, '
+                    f'адрес с которого принимаются подключения: {self._address}. '
                     f'Если адрес не указан, принимаются соединения с любых адресов.')
 
         print(f'Сервер запущен!\n'
-              f'Данные для подключения: {namespace.a if  namespace.a else "127.0.0.1" }:{namespace.p}')
+              f'Данные для подключения: {self._address if  self._address else "127.0.0.1" }:{self._port}')
 
-        clients = []
-        messages = []
-        client_names = {}
 
         while True:
             # Connect clients
@@ -53,7 +53,7 @@ def main():
                 pass
             else:
                 logger.info(f'Установлено соедение с ПК {addr}')
-                clients.append(client_sock)
+                self._clients.append(client_sock)
 
             recv_data_lst = []
             send_data_lst = []
@@ -61,8 +61,8 @@ def main():
 
             # Check waiting for receive or sending clients
             try:
-                if clients:
-                    recv_data_lst, send_data_lst, err_lst = select.select(clients, clients, [], 0)
+                if self._clients:
+                    recv_data_lst, send_data_lst, err_lst = select.select(self._clients, self._clients, [], 0)
             except OSError:
                 pass
 
@@ -70,30 +70,40 @@ def main():
             if recv_data_lst:
                 for client in recv_data_lst:
                     try:
-                        process_client_message(get_message(client), client, messages, clients, client_names)
+                        process_client_message(get_message(client), client, self._messages, self._clients, self._client_names)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
-                        clients.remove(client)
+                        self._clients.remove(client)
                     except json.JSONDecodeError:
                         logger.error(f'Не удалось декодировать JSON строку, полученную от '
                                      f'клиента {client.getpeername()}. Соединение закрывается.')
-                        clients.remove(client)
+                        self._clients.remove(client)
                     except Exception as e:
                         logger.error(f'Не удалось обработать сообщение: {client.getpeername()} отключился от '
                                      f'сервера! Ошибка: {e}')
-                        clients.remove(client)
+                        self._clients.remove(client)
 
             # Send client data
-            if messages and send_data_lst:
-                for message in messages:
+            if self._messages and send_data_lst:
+                for message in self._messages:
                     try:
-                        process_sending_message(message, send_data_lst, client_names)
+                        process_sending_message(message, send_data_lst, self._client_names)
                     except ConnectionError:
                         logger.error(f'Связь с клиентом {message[DESTINATION]} потеряна')
-                        clients.remove(client_names[message[DESTINATION]])
-                        del client_names[message[DESTINATION]]
-                messages.clear()
+                        self._clients.remove(self._client_names[message[DESTINATION]])
+                        del self._client_names[message[DESTINATION]]
+                self._messages.clear()
+
+
+def main():
+    # Parse launch params
+    arguments = argv_parser()
+    address = arguments['address']
+    port = arguments['port']
+    server = Server(address, port)
+    server.run()
+
 
 if __name__ == '__main__':
     main()

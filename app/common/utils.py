@@ -1,19 +1,31 @@
 import argparse
 import json
 import time
+import logging
+import sys
 
 from .logger import log
-from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE, USER
+from .variables import MAX_PACKAGE_LENGTH, ENCODING, ACTION, TIME, MESSAGE_TEXT, ACCOUNT_NAME, MESSAGE, USER, \
+    DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from .errors import IncorrectDataRecivedError
 
 
 @log
-def create_argv_parser():
+def argv_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', nargs='?')
-    parser.add_argument('-p', type=int, nargs='?')
+    parser.add_argument('addr', nargs='?')
+    parser.add_argument('port', type=int, nargs='?')
     parser.add_argument('-n', nargs='?')
-    return parser
+
+    namespace = parser.parse_args(sys.argv[1:])
+
+    address = namespace.addr if namespace.addr else DEFAULT_IP_ADDRESS
+    port = namespace.port if namespace.port else DEFAULT_PORT
+
+    if namespace.n:
+        client_name = namespace.n
+        return {'address': address, 'port': port, 'client_name': client_name}
+    return {'address': address, 'port': port, 'client_name': None}
 
 
 @log
