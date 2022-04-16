@@ -13,11 +13,12 @@ from common.client_utils import create_presence, process_response, \
 
 from common.utils import argv_parser, get_message, send_message
 from common.errors import ReqFieldMissingError
+from metaclasses import ClientVerifier
 
 logger = logging.getLogger('client_logger')
 
 
-class Client:
+class Client(metaclass=ClientVerifier):
 
     def __init__(self, address, port, client_name):
         self._port = port
