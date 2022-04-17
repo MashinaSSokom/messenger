@@ -14,6 +14,9 @@ TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
 
+# Database config
+SERVER_DATABASE = 'sqlite:///server_base.db3'
+
 # Others
 PRESENCE = 'presence'
 MESSAGE = 'message'
