@@ -4,7 +4,6 @@ logger = logging.getLogger('server_logger')
 
 class Port:
     def __set__(self, instance, value):
-        print(self)
 
         if not 1023 < value < 65536:
             logger.error(
