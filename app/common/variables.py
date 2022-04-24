@@ -3,7 +3,7 @@
 DEFAULT_PORT = 7777
 DEFAULT_IP_ADDRESS = '127.0.0.1'
 MAX_CONNECTIONS = 5
-MAX_PACKAGE_LENGTH = 1024
+MAX_PACKAGE_LENGTH = 4096
 SERVER_TIMEOUT = 0.5
 ENCODING = 'utf-8'
 
@@ -25,7 +25,11 @@ RESPONSE = 'response'
 ERROR = 'error'
 DESTINATION = 'destination'
 SENDER = 'sender'
+TARGET = 'target'
 EXIT = 'exit'
+GET_USERS = 'get_users'
+GET_ACTIVE_USERS = 'get_active_users'
+GET_HISTORY = 'get_history'
 RESPONSE_DEFAULT_IP_ADDRESS = 'response_default_ip_address'
 
 # Default responses
