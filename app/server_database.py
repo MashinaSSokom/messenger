@@ -104,11 +104,14 @@ class Storage:
                                   self.ActiveUsers.login_time).join(self.Users).all()
 
     def get_login_history(self, username=None):
-        query = self.session.query(self.Users.username, self.LoginHistory.ip_address, self.LoginHistory.port,
-                                   self.LoginHistory.login_time).join(self.Users)
-        if username:
-            return query.filter(self.Users.username == username).all()
-        return query.all()
+        try:
+            query = self.session.query(self.Users.username, self.LoginHistory.ip_address, self.LoginHistory.port,
+                                       self.LoginHistory.login_time).join(self.Users)
+            if username:
+                return query.filter(self.Users.username == username).limit(10).all()
+            return query.limit(10).all()
+        except Exception as e:
+            print(e)
 
 
 if __name__ == '__main__':

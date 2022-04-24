@@ -63,10 +63,10 @@ def create_get_active_users_message(client_name):
 
 
 @log
-def create_get_history_message(client_name, user=None):
+def create_get_history_message(client_name, target=None):
     message = {
         ACTION: GET_HISTORY,
-        TARGET: user,
+        TARGET: target,
         TIME: time.time(),
         SENDER: client_name,
         USER: {ACCOUNT_NAME: client_name}
@@ -110,8 +110,6 @@ def receive_message_from_server(client_socket: socket.socket, client_name: str):
             message = get_message(client_socket)
             sorted_message_keys = sorted(list(message.keys()))
             sorted_keys = sorted([USER, ACTION, TIME, SENDER, DESTINATION, MESSAGE_TEXT])
-            logger.debug(sorted_message_keys)
-            logger.debug(sorted_keys)
             if sorted_keys == sorted_message_keys:
                 if message[DESTINATION] == client_name:
                     print(f'\nПолучено сообщение от пользователя {message[SENDER]}:\n'
@@ -120,6 +118,8 @@ def receive_message_from_server(client_socket: socket.socket, client_name: str):
             else:
                 if message[ACTION] == GET_USERS:
                     print(f'Список всех пользователей:\n{message[MESSAGE_TEXT]}')
+                elif message[ACTION] == GET_HISTORY:
+                    print(f'Найденная история (последние 10 записей):\n{message[MESSAGE_TEXT]}')
                 elif message[ACTION] == EXIT:
                     print(f'Выход из программы завершен успешно! До свидания, {message[SENDER]} ^_^')
                     sys.exit(0)
@@ -132,7 +132,7 @@ def receive_message_from_server(client_socket: socket.socket, client_name: str):
                 ConnectionResetError, json.JSONDecodeError) as e:
             print(f'Потеряно соединение с сервером :( \n '
                   f'Выход из программы...')
-            logger.critical(f'{client_name} - потеряно соединение с сервером!')
+            logger.critical(f'{client_name} - потеряно соединение с сервером! Ошибка: {e}')
             time.sleep(1)
             break
 
@@ -142,7 +142,7 @@ def print_user_hint():
           f'message - отправить сообщение (получатель и текст сообщения будут запрошены отдельно)\n'
           f'get_users - получение списка всех пользователей\n'
           f'get_active_users - получение списка всех активных пользователей\n'
-          f'get_history - получение истории логина пользователя (пользователь будет запрошен отдельно)\n'
+          f'get_history - получение последних 10 записей истории (пользователь будет запрошен отдельно)\n'
           f'help - показать подсказку\n'
           f'exit - выйти из программы\n')
 
@@ -163,6 +163,13 @@ def user_interface(client_socket: socket.socket, client_name: str):
             break
         elif command == GET_USERS:
             send_message(client_socket, create_get_users_message(client_name))
+        elif command == GET_ACTIVE_USERS:
+            send_message(client_socket, create_get_history_message(client_name))
+        elif command == GET_HISTORY:
+            user_name = input(f'Введите имя пользователя для поиска (либо оставьте поле пустым для получения последних 50 записей): ')
+            if not client_name:
+                user_name = None
+            send_message(client_socket, create_get_history_message(client_name, target=user_name))
         elif command == 'help':
             print_user_hint()
         else:
