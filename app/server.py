@@ -22,7 +22,7 @@ logger = logging.getLogger('server_logger')
 class Server(metaclass=ServerVerifier):
     _port = Port()
 
-    def __init__(self, address, port, database):
+    def __init__(self, address, port, database: Storage):
         self._port = port
         self._address = address
         self._clients = []
@@ -81,13 +81,25 @@ class Server(metaclass=ServerVerifier):
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
                         self._clients.remove(client)
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                     except json.JSONDecodeError:
                         logger.error(f'Не удалось декодировать JSON строку, полученную от '
                                      f'клиента {client.getpeername()}. Соединение закрывается.')
                         self._clients.remove(client)
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                     except Exception as e:
                         logger.error(f'Не удалось обработать сообщение: {client.getpeername()} отключился от '
                                      f'сервера! Ошибка: {e}')
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                         self._clients.remove(client)
 
             # Send client data
