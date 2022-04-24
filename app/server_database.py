@@ -73,8 +73,6 @@ class Storage:
     def login_user(self, username, ip_address, port):
 
         res = self.session.query(self.Users).filter_by(username=username)
-        print(username)
-        print(res.first())
         if res.first():
             user = res.first()
             user.last_login = datetime.datetime.now()
