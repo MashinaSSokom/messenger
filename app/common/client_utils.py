@@ -117,11 +117,13 @@ def receive_message_from_server(client_socket: socket.socket, client_name: str):
                     logger.info(f'Клиент {client_name} получил сообщение от {message[SENDER]}')
             else:
                 if message[ACTION] == GET_USERS:
-                    print(f'Список всех пользователей:\n{message[MESSAGE_TEXT]}')
+                    print(f'\nСписок всех пользователей:\n{message[MESSAGE_TEXT]}')
+                elif message[ACTION] == GET_ACTIVE_USERS:
+                    print(f'\nСписок всех активных пользователей:\n{message[MESSAGE_TEXT]}')
                 elif message[ACTION] == GET_HISTORY:
-                    print(f'Найденная история (последние 10 записей):\n{message[MESSAGE_TEXT]}')
+                    print(f'\nНайденная история (последние 10 записей):\n{message[MESSAGE_TEXT]}')
                 elif message[ACTION] == EXIT:
-                    print(f'Выход из программы завершен успешно! До свидания, {message[SENDER]} ^_^')
+                    print(f'\nВыход из программы завершен успешно! До свидания, {message[SENDER]} ^_^')
                     sys.exit(0)
                 else:
                     print(f'Ошибка: {message[ERROR]}')
@@ -165,7 +167,7 @@ def user_interface(client_socket: socket.socket, client_name: str):
         elif command == GET_USERS:
             send_message(client_socket, create_get_users_message(client_name))
         elif command == GET_ACTIVE_USERS:
-            send_message(client_socket, create_get_history_message(client_name))
+            send_message(client_socket, create_get_active_users_message(client_name))
         elif command == GET_HISTORY:
             user_name = input(f'Введите имя пользователя для поиска (либо оставьте поле пустым для получения последних 50 записей): ')
             if not client_name:

@@ -9,7 +9,7 @@ from typing import Dict
 from common.server_utils import process_client_message, process_sending_message
 from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
-from app.common.errors import IncorrectDataRecivedError
+from common.errors import IncorrectDataRecivedError
 from logs import config_server_log
 from metaclasses import ServerVerifier
 from descriptors import Port

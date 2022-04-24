@@ -59,6 +59,16 @@ def process_client_message(message: dict, client: socket, messages: list, client
                 response[MESSAGE_TEXT] += f'Пользователь: {user.username} (последний логин - {user.last_login})\n'
             send_message(client, response)
             return
+        elif message[ACTION] == GET_ACTIVE_USERS:
+            users = database.get_all_active_users()
+            response = {
+                ACTION: GET_USERS,
+                MESSAGE_TEXT: ''
+            }
+            for user in users:
+                response[MESSAGE_TEXT] += f'Пользователь: имя - {user.username}, ip - {user.ip_address}:{user.port} (время логина - {user.login_time})\n'
+            send_message(client, response)
+            return
         elif message[ACTION] == GET_HISTORY:
             # if MESSAGE[TARGET]:
             response = {
