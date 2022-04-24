@@ -126,6 +126,7 @@ def receive_message_from_server(client_socket: socket.socket, client_name: str):
                 else:
                     print(f'Ошибка: {message[ERROR]}')
                     logger.error(f'{client_name} - получено некооректное сообщение: {message}')
+            print('Введите команду (подсказка - help): ', end='')
         except IncorrectDataRecivedError:
             logger.error(f'Не удалось декодировать полученное сообщение.')
         except (OSError, ConnectionError, ConnectionAbortedError,
