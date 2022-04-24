@@ -13,6 +13,7 @@ from app.common.errors import IncorrectDataRecivedError
 from logs import config_server_log
 from metaclasses import ServerVerifier
 from descriptors import Port
+from server_database import Storage
 
 # Logger initialization
 logger = logging.getLogger('server_logger')
@@ -21,12 +22,13 @@ logger = logging.getLogger('server_logger')
 class Server(metaclass=ServerVerifier):
     _port = Port()
 
-    def __init__(self, address, port):
+    def __init__(self, address, port, database):
         self._port = port
         self._address = address
         self._clients = []
         self._messages = []
         self._client_names = {}
+        self._database = database
 
     def _connect(self):
         serv_sock = socket(AF_INET, SOCK_STREAM)
@@ -73,7 +75,8 @@ class Server(metaclass=ServerVerifier):
             if recv_data_lst:
                 for client in recv_data_lst:
                     try:
-                        process_client_message(get_message(client), client, self._messages, self._clients, self._client_names)
+                        process_client_message(get_message(client), client, self._messages, self._clients,
+                                               self._client_names, self._database)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
@@ -104,7 +107,9 @@ def main():
     arguments = argv_parser()
     address = arguments['address']
     port = arguments['port']
-    server = Server(address, port)
+    db = Storage()
+
+    server = Server(address, port, db)
     server.run()
 
 
