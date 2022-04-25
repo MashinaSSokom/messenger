@@ -9,10 +9,11 @@ from typing import Dict
 from common.server_utils import process_client_message, process_sending_message
 from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
-from app.common.errors import IncorrectDataRecivedError
+from common.errors import IncorrectDataRecivedError
 from logs import config_server_log
 from metaclasses import ServerVerifier
 from descriptors import Port
+from server_database import Storage
 
 # Logger initialization
 logger = logging.getLogger('server_logger')
@@ -21,12 +22,13 @@ logger = logging.getLogger('server_logger')
 class Server(metaclass=ServerVerifier):
     _port = Port()
 
-    def __init__(self, address, port):
+    def __init__(self, address, port, database: Storage):
         self._port = port
         self._address = address
         self._clients = []
         self._messages = []
         self._client_names = {}
+        self._database = database
 
     def _connect(self):
         serv_sock = socket(AF_INET, SOCK_STREAM)
@@ -73,18 +75,31 @@ class Server(metaclass=ServerVerifier):
             if recv_data_lst:
                 for client in recv_data_lst:
                     try:
-                        process_client_message(get_message(client), client, self._messages, self._clients, self._client_names)
+                        process_client_message(get_message(client), client, self._messages, self._clients,
+                                               self._client_names, self._database)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
                         self._clients.remove(client)
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                     except json.JSONDecodeError:
                         logger.error(f'Не удалось декодировать JSON строку, полученную от '
                                      f'клиента {client.getpeername()}. Соединение закрывается.')
                         self._clients.remove(client)
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                     except Exception as e:
                         logger.error(f'Не удалось обработать сообщение: {client.getpeername()} отключился от '
                                      f'сервера! Ошибка: {e}')
+                        for key, value in dict(self._client_names).items():
+                            if value == client:
+                                self._database.logout_user(key)
+                                del self._client_names[key]
                         self._clients.remove(client)
 
             # Send client data
@@ -104,7 +119,9 @@ def main():
     arguments = argv_parser()
     address = arguments['address']
     port = arguments['port']
-    server = Server(address, port)
+    db = Storage()
+
+    server = Server(address, port, db)
     server.run()
 
 

@@ -1,6 +1,7 @@
 """Лаунчер"""
 
 import subprocess
+import sys
 import time
 
 PROCESS = []
@@ -13,11 +14,11 @@ while True:
     if ACTION == 'q':
         break
     elif ACTION == 's':
-        PROCESS.append(subprocess.Popen('python server.py',
+        PROCESS.append(subprocess.Popen([f'{sys.executable}', 'server.py'],
                                         creationflags=subprocess.CREATE_NEW_CONSOLE))
 
         for i in range(2):
-            PROCESS.append(subprocess.Popen(f'python client.py -n user{i}',
+            PROCESS.append(subprocess.Popen([f'{sys.executable}', f'client.py'],
                                             creationflags=subprocess.CREATE_NEW_CONSOLE))
     elif ACTION == 'x':
         while PROCESS:
