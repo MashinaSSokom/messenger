@@ -144,8 +144,8 @@ class Storage:
             print(e)
 
     def update_users_message_stats(self, sender_name: str, recipient_name: str) -> None:
-        sender = self.session.query(self.Users).filter_by(name=sender_name).first()
-        recipient = self.session.query(self.Users).filter_by(name=recipient_name).first()
+        sender = self.session.query(self.Users).filter_by(username=sender_name).first()
+        recipient = self.session.query(self.Users).filter_by(username=recipient_name).first()
         sender_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=sender).first()
         recipient_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=recipient).first()
 
@@ -155,8 +155,8 @@ class Storage:
         self.session.commit()
 
     def add_contact(self, user_name: str, contact_name: str) -> None | bool:
-        user = self.session.query(self.Users).filter_by(name=user_name).first()
-        contact = self.session.query(self.Users).filter_by(name=contact_name).first()
+        user = self.session.query(self.Users).filter_by(username=user_name).first()
+        contact = self.session.query(self.Users).filter_by(username=contact_name).first()
 
         if not contact or self.session.query(self.UsersContacts).filter_by(user=user.id, contact=contact.id).count():
             return False
@@ -166,8 +166,8 @@ class Storage:
         self.session.commit()
 
     def remove_contact(self, user_name: str, contact_name: str) -> None | bool:
-        user = self.session.query(self.Users).filter_by(name=user_name).first()
-        contact = self.session.query(self.Users).filter_by(name=contact_name).first()
+        user = self.session.query(self.Users).filter_by(username=user_name).first()
+        contact = self.session.query(self.Users).filter_by(username=contact_name).first()
 
         if not contact:
             return False
@@ -177,11 +177,11 @@ class Storage:
         self.session.commit()
 
     def get_contacts(self, user_name: str) -> list:
-        user = self.session.query(self.Users).filter_by(name=user_name).first()
-
+        user = self.session.query(self.Users).filter_by(username=user_name).first()
+        contacts = self.session.query(self.Users.username).filter(self.UsersContacts.user == user.id).join(
+            self.UsersContacts, self.Users.id == self.UsersContacts.contact).all()
         return [
-            contact[1] for contact in self.session.query(self.UsersContacts, self.Users).filter_by(user=user.id). \
-                join(self.Users, self.UsersContacts.contact == self.Users.id)
+            contact_name for contact_name in contacts
         ]
 
     def get_messages_stats(self) -> list:
@@ -196,15 +196,20 @@ class Storage:
 if __name__ == '__main__':
     test_db = Storage()
     # выполняем 'подключение' пользователя
-    test_db.login_user('client_1', '192.168.1.4', 8888)
+    test_db.login_user('client_1', '192.168.1.4', 7777)
     test_db.login_user('client_2', '192.168.1.5', 7777)
+    test_db.login_user('client_3', '192.168.1.6', 7777)
     # выводим список кортежей - активных пользователей
-    print(test_db.get_all_users())
-    print(test_db.get_all_active_users())
-    # выполянем 'отключение' пользователя
-    test_db.logout_user('client_1')
-    # выводим список активных пользователей
-    print(test_db.get_all_active_users())
-    # запрашиваем историю входов по пользователю
-    print(test_db.get_login_history('client_1'))
+    # print(test_db.get_all_users())
+    # print(test_db.get_all_active_users())
+    # # выполянем 'отключение' пользователя
+    # test_db.logout_user('client_1')
+    # # выводим список активных пользователей
+    # print(test_db.get_all_active_users())
+    # # запрашиваем историю входов по пользователю
+    # print(test_db.get_login_history('client_1'))
+    test_db.add_contact('client_1', 'client_2')
+    test_db.add_contact('client_1', 'client_3')
+    print(test_db.get_contacts('client_1'))
+    print(test_db.get_contacts('client_2'))
     # выводим список известных пользователей
