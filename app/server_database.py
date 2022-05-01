@@ -212,4 +212,5 @@ if __name__ == '__main__':
     test_db.add_contact('client_1', 'client_3')
     print(test_db.get_contacts('client_1'))
     print(test_db.get_contacts('client_2'))
-    # выводим список известных пользователей
+    test_db.remove_contact('client_1', 'client_3')
+    print(test_db.get_contacts('client_1'))
