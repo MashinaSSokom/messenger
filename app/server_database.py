@@ -26,8 +26,20 @@ class Storage:
             self.port = port
             self.login_time = login_time
 
+    class UsersContacts:
+        def __init__(self, user_id, contact_id):
+            self.user = user_id
+            self.contact = contact_id
+
+    class UsersMessagesStats:
+        def __init__(self, user_id):
+            self.user = user_id
+            self.sent = 0
+            self.received = 0
+
     def __init__(self):
-        self.engine = create_engine(SERVER_DATABASE, echo=False, pool_recycle=7200)
+        self.engine = create_engine(SERVER_DATABASE, echo=False, pool_recycle=7200,
+                                    connect_args={'check_same_thread': False})
         self.metadata = MetaData()
 
         # Tables models
@@ -56,11 +68,28 @@ class Storage:
             Column('login_time', DateTime)
         )
 
+        users_contacts_table = Table(
+            'Contacts', self.metadata,
+            Column('id', Integer, primary_key=True),
+            Column('user', ForeignKey('Users.id')),
+            Column('contact', ForeignKey('Users.id'))
+        )
+
+        users_messages_stats_table = Table(
+            'Messages_stats', self.metadata,
+            Column('id', Integer, primary_key=True),
+            Column('user', ForeignKey('Users.id')),
+            Column('sent', Integer, default=0),
+            Column('received', Integer, default=0)
+        )
+
         self.metadata.create_all(self.engine)
 
         mapper(self.Users, users_table)
         mapper(self.ActiveUsers, active_users_table)
         mapper(self.LoginHistory, login_history_table)
+        mapper(self.UsersContacts, users_contacts_table)
+        mapper(self.UsersMessagesStats, users_messages_stats_table)
 
         session = sessionmaker(bind=self.engine)
         self.session = session()
@@ -81,9 +110,12 @@ class Storage:
             user = self.Users(username)
             self.session.add(user)
             self.session.commit()
+            user_message_history_record = self.UsersMessagesStats(user.id)
+            self.session.add(user_message_history_record)
 
         active_user = self.ActiveUsers(user.id, ip_address, port, login_time=datetime.datetime.now())
-        history_record = self.LoginHistory(user_id=user.id, ip_address=ip_address, port=port, login_time=datetime.datetime.now())
+        history_record = self.LoginHistory(user_id=user.id, ip_address=ip_address, port=port,
+                                           login_time=datetime.datetime.now())
         self.session.add(active_user)
         self.session.add(history_record)
         # self.session.add_all([history_record, active_user])
@@ -112,6 +144,7 @@ class Storage:
             return query.limit(10).all()
         except Exception as e:
             print(e)
+
 
 
 if __name__ == '__main__':
