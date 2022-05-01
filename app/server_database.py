@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 
 from sqlalchemy import create_engine, Table, Column, String, Integer, ForeignKey, MetaData, DateTime
