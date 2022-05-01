@@ -145,6 +145,17 @@ class Storage:
         except Exception as e:
             print(e)
 
+    def update_users_message_stats(self, sender_name, recipient_name):
+        sender = self.session.query(self.Users).filter_by(name=sender_name).first()
+        recipient = self.session.query(self.Users).filter_by(name=recipient_name).first()
+        sender_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=sender).first()
+        recipient_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=recipient).first()
+
+        sender_messages_history.sent += 1
+        recipient_messages_history.received += 1
+
+        self.session.commit()
+
 
 
 if __name__ == '__main__':
