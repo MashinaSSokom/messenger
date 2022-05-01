@@ -99,8 +99,7 @@ class Storage:
         self.session.commit()
 
     # Database methods
-    def login_user(self, username, ip_address, port):
-
+    def login_user(self, username: str, ip_address: str, port: int):
         res = self.session.query(self.Users).filter_by(username=username)
         if res.first():
             user = res.first()
@@ -121,21 +120,20 @@ class Storage:
         # self.session.add_all([history_record, active_user])
         self.session.commit()
 
-    def logout_user(self, username):
-
+    def logout_user(self, username: str) -> None:
         user = self.session.query(self.Users).filter_by(username=username).first()
 
         self.session.query(self.ActiveUsers).filter_by(user=user.id).delete()
         self.session.commit()
 
-    def get_all_users(self):
+    def get_all_users(self) -> list:
         return self.session.query(self.Users.username, self.Users.last_login).all()
 
-    def get_all_active_users(self):
+    def get_all_active_users(self) -> list:
         return self.session.query(self.Users.username, self.ActiveUsers.ip_address, self.ActiveUsers.port,
                                   self.ActiveUsers.login_time).join(self.Users).all()
 
-    def get_login_history(self, username=None):
+    def get_login_history(self, username: str = None) -> list:
         try:
             query = self.session.query(self.Users.username, self.LoginHistory.ip_address, self.LoginHistory.port,
                                        self.LoginHistory.login_time).join(self.Users)
@@ -145,7 +143,7 @@ class Storage:
         except Exception as e:
             print(e)
 
-    def update_users_message_stats(self, sender_name, recipient_name):
+    def update_users_message_stats(self, sender_name: str, recipient_name: str) -> None:
         sender = self.session.query(self.Users).filter_by(name=sender_name).first()
         recipient = self.session.query(self.Users).filter_by(name=recipient_name).first()
         sender_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=sender).first()
@@ -156,7 +154,7 @@ class Storage:
 
         self.session.commit()
 
-    def add_contact(self, user_name, contact_name):
+    def add_contact(self, user_name: str, contact_name: str) -> None | bool:
         user = self.session.query(self.Users).filter_by(name=user_name).first()
         contact = self.session.query(self.Users).filter_by(name=contact_name).first()
 
@@ -167,7 +165,7 @@ class Storage:
         self.session.add(record)
         self.session.commit()
 
-    def remove_contact(self, user_name, contact_name):
+    def remove_contact(self, user_name: str, contact_name: str) -> None | bool:
         user = self.session.query(self.Users).filter_by(name=user_name).first()
         contact = self.session.query(self.Users).filter_by(name=contact_name).first()
 
@@ -178,22 +176,22 @@ class Storage:
 
         self.session.commit()
 
-    def get_contacts(self, user_name):
+    def get_contacts(self, user_name: str) -> list:
         user = self.session.query(self.Users).filter_by(name=user_name).first()
 
         return [
             contact[1] for contact in self.session.query(self.UsersContacts, self.Users).filter_by(user=user.id). \
-            join(self.Users, self.UsersContacts.contact == self.Users.id)
+                join(self.Users, self.UsersContacts.contact == self.Users.id)
         ]
 
-    def get_messages_stats(self):
-
+    def get_messages_stats(self) -> list:
         return self.session.query(
             self.Users.name,
             self.Users.last_login,
             self.UsersMessagesStatse.sent,
             self.UsersMessagesStatse.received
         ).join(self.UsersMessagesStats).all()
+
 
 if __name__ == '__main__':
     test_db = Storage()
