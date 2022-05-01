@@ -186,7 +186,14 @@ class Storage:
             join(self.Users, self.UsersContacts.contact == self.Users.id)
         ]
 
+    def get_messages_stats(self):
 
+        return self.session.query(
+            self.Users.name,
+            self.Users.last_login,
+            self.UsersMessagesStatse.sent,
+            self.UsersMessagesStatse.received
+        ).join(self.UsersMessagesStats).all()
 
 if __name__ == '__main__':
     test_db = Storage()
