@@ -178,6 +178,14 @@ class Storage:
 
         self.session.commit()
 
+    def get_contacts(self, user_name):
+        user = self.session.query(self.Users).filter_by(name=user_name).first()
+
+        return [
+            contact[1] for contact in self.session.query(self.UsersContacts, self.Users).filter_by(user=user.id). \
+            join(self.Users, self.UsersContacts.contact == self.Users.id)
+        ]
+
 
 
 if __name__ == '__main__':
