@@ -167,6 +167,17 @@ class Storage:
         self.session.add(record)
         self.session.commit()
 
+    def remove_contact(self, user_name, contact_name):
+        user = self.session.query(self.Users).filter_by(name=user_name).first()
+        contact = self.session.query(self.Users).filter_by(name=contact_name).first()
+
+        if not contact:
+            return False
+
+        self.session.query(self.UsersContacts).filter_by(user=user.id, contact=contact.id).delete()
+
+        self.session.commit()
+
 
 
 if __name__ == '__main__':
