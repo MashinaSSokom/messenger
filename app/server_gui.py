@@ -5,6 +5,49 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QLabel, QLineEdit, QFile
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QTimer
 
+from server_database import Storage
+
+
+def create_active_clients_model(db: Storage) -> QStandardItemModel:
+    active_users = db.get_all_active_users()
+    active_users_model = QStandardItemModel()
+    active_users_model.setHorizontalHeaderLabels(['Имя клиента', 'IP', 'Порт', 'Время входа'])
+    for user in active_users:
+        username, ip, port, time = user
+        username = QStandardItem(username)
+        username.setEditable(False)
+        ip = QStandardItem(ip)
+        ip.setEditable(False)
+        port = QStandardItem(str(port))
+        port.setEditable(False)
+        time = QStandardItem(str(time.replace(microseconds=0)))
+        time.setEditable(False)
+        active_users_model.appendRow([username, ip, port, time])
+    return active_users_model
+
+
+def create_messages_stats_model(db: Storage) -> QStandardItemModel:
+    messages_stats = db.get_messages_stats()
+
+    messages_stats_model = QStandardItemModel()
+    messages_stats_model.setHorizontalHeaderLabels(
+        ['Имя клиента', 'Время последнего входа', 'Сообщений отправлено', 'Сообщений принято']
+    )
+
+    for stat_record in messages_stats:
+        username, last_login, sent, received = stat_record
+        username = QStandardItem(username)
+        username.setEditable(False)
+        last_login = QStandardItem(str(last_login.replace(microseconds=0)))
+        last_login.setEditable(False)
+        sent = QStandardItem(str(sent))
+        sent.setEditable(False)
+        received = QStandardItem(str(received))
+        received.setEditable(False)
+        messages_stats_model.appendRow([username, last_login, sent, received])
+
+    return messages_stats_model
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
