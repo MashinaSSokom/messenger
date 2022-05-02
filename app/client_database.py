@@ -65,4 +65,71 @@ class ClientStorage:
         self.session.query(self.Contacts).delete()
         self.session.commit()
 
+    def add_contact(self, contact_name: str) -> None:
+        if not self.session.query(self.Contacts).filter_by(contact_name=contact_name).first():
+            contact = self.Contacts(contact_name)
+            self.session.add(contact)
+            self.session.commit()
 
+    def del_contact(self, contact_name: str) -> None:
+        self.session.query(self.Contacts).filter_by(contact_name=contact_name).delete()
+
+    def add_users_to_known(self, users_list: list[str]) -> None:
+        self.session.query(self.KnownUsers).delete()
+        for user_name in users_list:
+            known_user = self.KnownUsers(user_name)
+            self.session.add(known_user)
+        self.session.commit()
+
+    def save_message(self, sender: str, recipient: str, message: str) -> None:
+        message_history_record = self.MessageHistory(sender, recipient, message)
+        self.session.add(message_history_record)
+        self.session.commit()
+
+    def get_known_users(self) -> list:
+        return [user[0] for user in self.session.query(self.KnownUsers.username).all()]
+
+    def get_contacts(self) -> list:
+        return [contact[0] for contact in self.session.query(self.Contacts.contact_name).all()]
+
+    def check_is_known_user(self, username: str) -> bool:
+        if self.session.query(self.KnownUsers).filter_by(username=username).first():
+            return True
+        return False
+
+    def check_is_contact(self, contact_name: str) -> bool:
+        if self.session.query(self.Contacts).filter_by(contact_name=contact_name).first():
+            return True
+        return False
+
+    def get_message_history(self, sender=None, recipient=None) -> list | bool:
+        if sender and recipient:
+            return False
+        query = self.session.query(self.MessageHistory)
+        if sender:
+            query = self.session.query(self.MessageHistory).filter_by(sender=sender)
+
+        elif recipient:
+            query = self.session.query(self.MessageHistory).filter_by(recipient=recipient)
+
+        return [(history_record.sender, history_record.recipient, history_record.message, history_record.date) for
+                history_record in query.all()]
+
+
+if __name__ == '__main__':
+    test_db = ClientStorage('test1')
+    for i in ['test3', 'test4', 'test5']:
+        test_db.add_contact(i)
+    test_db.add_contact('test4')
+    test_db.add_users_to_known(['test1', 'test2', 'test3', 'test4', 'test5'])
+    test_db.save_message('test1', 'test2', f'Привет! я тестовое сообщение от {datetime.datetime.now()}!')
+    test_db.save_message('test2', 'test1', f'Привет! я другое тестовое сообщение от {datetime.datetime.now()}!')
+    print(test_db.get_contacts())
+    print(test_db.get_known_users())
+    print(test_db.check_is_known_user('test1'))
+    print(test_db.check_is_known_user('test10'))
+    print(test_db.get_message_history('test2'))
+    print(test_db.get_message_history(recipient='test2'))
+    print(test_db.get_message_history('test3'))
+    test_db.del_contact('test4')
+    print(test_db.get_contacts())
