@@ -13,7 +13,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from common.server_utils import process_client_message, process_sending_message
 from common.utils import argv_parser, get_message, send_message, create_message_to_send
-from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
+from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION, SERVER_DATABASE
 from common.errors import IncorrectDataRecivedError
 from logs import config_server_log
 from metaclasses import ServerVerifier
@@ -155,8 +155,19 @@ def main():
             messages_stats.show()
 
         def show_config() -> None:
-            print('Config')
-            pass
+            global config_window
+            config_window = ConfigWindow()
+            config_window.db_path.insert(SERVER_DATABASE)
+            config_window.db_file.insert('In progress...') #TODO: разделить путь от имени файла в найстроках, либо убрать имя файла из окна конфига
+            config_window.ip.insert(address)
+            config_window.port.insert(str(port))
+            config_window.save_btn.clicked.connect(save_config)
+            config_window.show()
+
+        def save_config() -> None: #TODO: доработать настройку конфига через интерфейс + перезапуск после сохранения
+            global config_window
+            message = QMessageBox()
+            message.information(config_window, 'ОК', 'Найстройки успешно сохранены')
 
         main_window.refresh_button.triggered.connect(update_active_users)
         main_window.messages_stats_button.triggered.connect(show_messages_stats)

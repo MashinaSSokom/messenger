@@ -148,8 +148,23 @@ class ConfigWindow(QDialog):
         self.db_file.move(200, 66)
         self.db_file.setFixedSize(150, 20)
 
+        # Метка с адресом для соединений
+        self.ip_label = QLabel('IP-адрес:', self)
+        self.ip_label.move(10, 148)
+        self.ip_label.setFixedSize(180, 15)
+
+        # # Метка с напоминанием о пустом поле.
+        # self.ip_label_note = QLabel(' оставьте это поле пустым, чтобы\n принимать соединения с любых адресов.', self)
+        # self.ip_label_note.move(10, 168)
+        # self.ip_label_note.setFixedSize(500, 30)
+
+        # Поле для ввода ip
+        self.ip = QLineEdit(self)
+        self.ip.move(200, 148)
+        self.ip.setFixedSize(150, 20)
+
         # Метка с номером порта
-        self.port_label = QLabel('Номер порта для соединений:', self)
+        self.port_label = QLabel('Номер порта:', self)
         self.port_label.move(10, 108)
         self.port_label.setFixedSize(180, 15)
 
@@ -158,24 +173,9 @@ class ConfigWindow(QDialog):
         self.port.move(200, 108)
         self.port.setFixedSize(150, 20)
 
-        # Метка с адресом для соединений
-        self.ip_label = QLabel('С какого IP принимаем соединения:', self)
-        self.ip_label.move(10, 148)
-        self.ip_label.setFixedSize(180, 15)
-
-        # Метка с напоминанием о пустом поле.
-        self.ip_label_note = QLabel(' оставьте это поле пустым, чтобы\n принимать соединения с любых адресов.', self)
-        self.ip_label_note.move(10, 168)
-        self.ip_label_note.setFixedSize(500, 30)
-
-        # Поле для ввода ip
-        self.ip = QLineEdit(self)
-        self.ip.move(200, 148)
-        self.ip.setFixedSize(150, 20)
-
         # Кнопка сохранения настроек
         self.save_btn = QPushButton('Сохранить', self)
-        self.save_btn.move(180, 220)
+        self.save_btn.move(160, 220)
 
         # Кнапка закрытия окна
         self.close_button = QPushButton('Закрыть', self)
