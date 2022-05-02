@@ -1,11 +1,16 @@
 """ SERVER LOGIC SCRIPT """
-
+import sys
+import threading
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import select
 import logging
 import json
 from typing import Dict
 
+
+from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from common.server_utils import process_client_message, process_sending_message
 from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.variables import DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION
@@ -15,14 +20,19 @@ from metaclasses import ServerVerifier
 from descriptors import Port
 from server_database import Storage
 
+from server_gui import MainWindow,  HistoryWindow, ConfigWindow, create_messages_stats_model, \
+    create_active_clients_model
+
+
 # Logger initialization
 logger = logging.getLogger('server_logger')
 
 
-class Server(metaclass=ServerVerifier):
+class Server(threading.Thread, metaclass=ServerVerifier):
     _port = Port()
 
     def __init__(self, address, port, database: Storage):
+        super().__init__()
         self._port = port
         self._address = address
         self._clients = []
@@ -47,7 +57,6 @@ class Server(metaclass=ServerVerifier):
 
         print(f'Сервер запущен!\n'
               f'Данные для подключения: {self._address if  self._address else "127.0.0.1" }:{self._port}')
-
 
         while True:
             # Connect clients
@@ -122,7 +131,35 @@ def main():
     db = Storage()
 
     server = Server(address, port, db)
-    server.run()
+    server.daemon = True
+    server.start()
+
+    server_app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.statusBar().showMessage('Сервер запущен!')
+    main_window.active_clients_table.setModel(create_active_clients_model(db))
+    main_window.active_clients_table.resizeColumnsToContents()
+    main_window.active_clients_table.resizeRowsToContents()
+
+    def update_active_users():
+        print('Update active users!')
+        pass
+
+    def show_history():
+        print('Histroy')
+        pass
+
+    def show_config():
+        print('Config')
+        pass
+
+    main_window.refresh_button.triggered.connect(update_active_users)
+    main_window.client_history_button.triggered.connect(show_history)
+    main_window.config_button.triggered.connect(show_config)
+    server_app.exec_()
+
+
+
 
 
 if __name__ == '__main__':
