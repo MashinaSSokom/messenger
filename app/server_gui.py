@@ -1,5 +1,4 @@
 import sys
-import os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QLabel, QLineEdit, QFileDialog, QMessageBox, QTableView,\
     QDialog, QPushButton, QApplication
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
@@ -20,7 +19,7 @@ def create_active_clients_model(db: Storage) -> QStandardItemModel:
         ip.setEditable(False)
         port = QStandardItem(str(port))
         port.setEditable(False)
-        time = QStandardItem(str(time.replace(microseconds=0)))
+        time = QStandardItem(str(time.replace(microsecond=0)))
         time.setEditable(False)
         active_users_model.appendRow([username, ip, port, time])
     return active_users_model
@@ -38,7 +37,7 @@ def create_messages_stats_model(db: Storage) -> QStandardItemModel:
         username, last_login, sent, received = stat_record
         username = QStandardItem(username)
         username.setEditable(False)
-        last_login = QStandardItem(str(last_login.replace(microseconds=0)))
+        last_login = QStandardItem(str(last_login.replace(microsecond=0)))
         last_login.setEditable(False)
         sent = QStandardItem(str(sent))
         sent.setEditable(False)
@@ -61,7 +60,7 @@ class MainWindow(QMainWindow):
 
         self.refresh_button = QAction('Обновить', self)
         self.config_button = QAction('Настройки сервера', self)
-        self.messages_history_button = QAction('История сообщений клиентов', self)
+        self.messages_stats_button = QAction('История сообщений клиентов', self)
 
         self.statusBar()
 
@@ -69,7 +68,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(exit_action)
         self.toolbar.addAction(self.refresh_button)
         self.toolbar.addAction(self.config_button)
-        self.toolbar.addAction(self.client_history_button)
+        self.toolbar.addAction(self.messages_stats_button)
 
         self.setFixedSize(800, 600)
         self.setWindowTitle('Messager Server')
@@ -85,9 +84,9 @@ class MainWindow(QMainWindow):
         self.show()
 
 
-class MessagesHistory(QDialog):
+class MessagesStats(QDialog):
     def __init__(self):
-        super(MessagesHistory, self).__init__()
+        super(MessagesStats, self).__init__()
         self.init_ui()
 
     def init_ui(self):
