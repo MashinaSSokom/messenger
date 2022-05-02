@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
 
         self.refresh_button = QAction('Обновить', self)
         self.config_button = QAction('Настройки сервера', self)
-        self.client_history_button = QAction('История клиентов', self)
+        self.messages_history_button = QAction('История сообщений клиентов', self)
 
         self.statusBar()
 
@@ -85,13 +85,13 @@ class MainWindow(QMainWindow):
         self.show()
 
 
-class HistoryWindow(QDialog):
+class MessagesHistory(QDialog):
     def __init__(self):
-        super(HistoryWindow, self).__init__()
+        super(MessagesHistory, self).__init__()
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('Статистика клиентов')
+        self.setWindowTitle('Статистика сообщений клиентов')
         self.setFixedSize(600, 700)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -99,8 +99,8 @@ class HistoryWindow(QDialog):
         self.close_button.move(250, 650)
         self.close_button.clicked.connect(self.close)
 
-        self.history_table = QTableView(self)
-        self.history_table.setFixedSize(580, 620)
+        self.messages_stats_table = QTableView(self)
+        self.messages_stats_table.setFixedSize(580, 620)
         self.move(10, 10)
 
         self.show()
