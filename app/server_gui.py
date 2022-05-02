@@ -12,16 +12,16 @@ def create_active_clients_model(db: Storage) -> QStandardItemModel:
     active_users_model = QStandardItemModel()
     active_users_model.setHorizontalHeaderLabels(['Имя клиента', 'IP', 'Порт', 'Время входа'])
     for user in active_users:
-        username, ip, port, time = user
+        username, ip, port, login_time = user
         username = QStandardItem(username)
         username.setEditable(False)
         ip = QStandardItem(ip)
         ip.setEditable(False)
         port = QStandardItem(str(port))
         port.setEditable(False)
-        time = QStandardItem(str(time.replace(microsecond=0)))
-        time.setEditable(False)
-        active_users_model.appendRow([username, ip, port, time])
+        login_time = QStandardItem(str(login_time.replace(microsecond=0)))
+        login_time.setEditable(False)
+        active_users_model.appendRow([username, ip, port, login_time])
     return active_users_model
 
 
