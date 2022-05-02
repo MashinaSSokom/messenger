@@ -5,18 +5,15 @@ from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import select
 import logging
 import json
-from typing import Dict
 import time
 
 from common.logger import log
 from common.variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TIME, PRESENCE, MESSAGE, MESSAGE_TEXT, \
     DESTINATION, SENDER, EXIT, RESPONSE_200, RESPONSE_400, GET_HISTORY, GET_USERS, GET_ACTIVE_USERS, TARGET, \
     DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION, SERVER_DATABASE
-from common.utils import send_message
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-# from common.server_utils import process_client_message, process_sending_message
 from common.utils import argv_parser, get_message, send_message, create_message_to_send
 from common.errors import IncorrectDataRecivedError
 from logs import config_server_log
@@ -67,16 +64,12 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         return message
 
     @log
-    def process_client_message(self, message: dict, client: socket, messages: list, clients: list, client_names: dict,
+    def _process_client_message(self, message: dict, client: socket, messages: list, clients: list, client_names: dict,
                                database: Storage):
         """"""
         global new_connection
         logger.debug(f'Обработка сообщения от клиента : {message}')
 
-        # Checking compliance with JIM
-        sorted_message_keys = sorted(list(message.keys()))
-        sorted_keys1 = sorted([USER, ACTION, TIME, SENDER])
-        sorted_keys2 = sorted([USER, ACTION, TIME, MESSAGE_TEXT, DESTINATION, SENDER])
         if message[SENDER] and message[ACTION] and message[TIME] and message[SENDER]:
             if message[ACTION] == PRESENCE:
                 if message[SENDER] not in client_names.keys():
@@ -142,7 +135,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         return
 
     @log
-    def process_sending_message(message: dict, clients: list[socket], client_names: dict):
+    def _process_sending_message(self, message: dict, clients: list[socket], client_names: dict):
         """"""
 
         if message[DESTINATION] in client_names and client_names[message[DESTINATION]] in clients:
@@ -194,7 +187,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             if recv_data_lst:
                 for client in recv_data_lst:
                     try:
-                        self.process_client_message(get_message(client), client, self._messages, self._clients,
+                        self._process_client_message(get_message(client), client, self._messages, self._clients,
                                                self._client_names, self._database)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
@@ -225,7 +218,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             if self._messages and send_data_lst:
                 for message in self._messages:
                     try:
-                        self.process_sending_message(message, send_data_lst, self._client_names)
+                        self._process_sending_message(message, send_data_lst, self._client_names)
                     except ConnectionError:
                         logger.error(f'Связь с клиентом {message[DESTINATION]} потеряна')
                         self._clients.remove(self._client_names[message[DESTINATION]])
@@ -251,10 +244,6 @@ def main():
         main_window.active_clients_table.setModel(create_active_clients_model(db))
         main_window.active_clients_table.resizeColumnsToContents()
         main_window.active_clients_table.resizeRowsToContents()
-
-        def update_active_users() -> None:
-            print('Update active users!')
-            pass
 
         def show_messages_stats() -> None:
             global messages_stats
