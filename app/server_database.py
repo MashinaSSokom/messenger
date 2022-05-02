@@ -188,7 +188,7 @@ class Storage:
         contacts = self.session.query(self.Users.username).filter(self.UsersContacts.user == user.id).join(
             self.UsersContacts, self.Users.id == self.UsersContacts.contact).all()
         return [
-            contact_name for contact_name in contacts
+            contact_name[0] for contact_name in contacts
         ]
 
     def get_messages_stats(self) -> list:
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     # print(test_db.get_contacts('client_1'))
     # print(test_db.get_contacts('client_2'))
     # test_db.remove_contact('client_1', 'client_3')
-    # print(test_db.get_contacts('client_1'))
+    print(test_db.get_contacts('client_1'))
     print('Stats:', test_db.get_messages_stats())
     test_db.update_users_message_stats(sender_name='client_3', recipient_name='client_4')
     print('Stats:', test_db.get_messages_stats())
