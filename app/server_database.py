@@ -11,11 +11,13 @@ from common.variables import SERVER_DATABASE
 class Storage:
     class Users:
         def __init__(self, username):
+            self.id = None
             self.username = username
             self.last_login = datetime.datetime.now()
 
     class ActiveUsers:
         def __init__(self, user_id, ip_address, port, login_time):
+            self.id = None
             self.user = user_id
             self.ip_address = ip_address
             self.port = port
@@ -23,6 +25,7 @@ class Storage:
 
     class LoginHistory:
         def __init__(self, user_id, ip_address, port, login_time):
+            self.id = None
             self.user = user_id
             self.ip_address = ip_address
             self.port = port
@@ -30,11 +33,13 @@ class Storage:
 
     class UsersContacts:
         def __init__(self, user_id, contact_id):
+            self.id = None
             self.user = user_id
             self.contact = contact_id
 
     class UsersMessagesStats:
         def __init__(self, user_id):
+            self.id = None
             self.user = user_id
             self.sent = 0
             self.received = 0
@@ -146,10 +151,10 @@ class Storage:
             print(e)
 
     def update_users_message_stats(self, sender_name: str, recipient_name: str) -> None:
-        sender = self.session.query(self.Users).filter_by(username=sender_name).first()
-        recipient = self.session.query(self.Users).filter_by(username=recipient_name).first()
-        sender_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=sender).first()
-        recipient_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=recipient).first()
+        sender_id = self.session.query(self.Users).filter_by(username=sender_name).first().id
+        recipient_id = self.session.query(self.Users).filter_by(username=recipient_name).first().id
+        sender_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=sender_id).first()
+        recipient_messages_history = self.session.query(self.UsersMessagesStats).filter_by(user=recipient_id).first()
 
         sender_messages_history.sent += 1
         recipient_messages_history.received += 1
@@ -187,11 +192,11 @@ class Storage:
         ]
 
     def get_messages_stats(self) -> list:
-        return self.session.query(
-            self.Users.name,
+       return self.session.query(
+            self.Users.username,
             self.Users.last_login,
-            self.UsersMessagesStatse.sent,
-            self.UsersMessagesStatse.received
+            self.UsersMessagesStats.sent,
+            self.UsersMessagesStats.received
         ).join(self.UsersMessagesStats).all()
 
 
@@ -201,6 +206,8 @@ if __name__ == '__main__':
     test_db.login_user('client_1', '192.168.1.4', 7777)
     test_db.login_user('client_2', '192.168.1.5', 7777)
     test_db.login_user('client_3', '192.168.1.6', 7777)
+    test_db.login_user('client_4', '192.168.1.6', 7777)
+
     # выводим список кортежей - активных пользователей
     # print(test_db.get_all_users())
     # print(test_db.get_all_active_users())
@@ -212,7 +219,10 @@ if __name__ == '__main__':
     # print(test_db.get_login_history('client_1'))
     test_db.add_contact('client_1', 'client_2')
     test_db.add_contact('client_1', 'client_3')
-    print(test_db.get_contacts('client_1'))
-    print(test_db.get_contacts('client_2'))
-    test_db.remove_contact('client_1', 'client_3')
-    print(test_db.get_contacts('client_1'))
+    # print(test_db.get_contacts('client_1'))
+    # print(test_db.get_contacts('client_2'))
+    # test_db.remove_contact('client_1', 'client_3')
+    # print(test_db.get_contacts('client_1'))
+    print('Stats:', test_db.get_messages_stats())
+    test_db.update_users_message_stats(sender_name='client_3', recipient_name='client_4')
+    print('Stats:', test_db.get_messages_stats())
