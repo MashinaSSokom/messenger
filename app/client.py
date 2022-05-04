@@ -7,23 +7,26 @@ import logging
 import json
 import threading
 
+from common.variables import MESSAGE
 from logs import config_client_log
 from common.client_utils import create_presence, process_response, \
-    receive_message_from_server, user_interface
+    receive_message_from_server, user_interface, load_users_from_server
 
 from common.utils import argv_parser, get_message, send_message
-from common.errors import ReqFieldMissingError
+from common.errors import ReqFieldMissingError, ServerError
 from metaclasses import ClientVerifier
+from client_database import ClientStorage
 
 logger = logging.getLogger('client_logger')
 
 
 class Client(metaclass=ClientVerifier):
 
-    def __init__(self, address, port, client_name):
+    def __init__(self, address: str, port: int, client_name: str, database: ClientStorage):
         self._port = port
         self._address = address
         self._client_name = client_name
+        self._database = database
 
     def _connect(self):
         try:
@@ -35,10 +38,19 @@ class Client(metaclass=ClientVerifier):
             logger.info(f'Клиент {self._client_name} получил от сервера сообщение {response}')
             result = process_response(response)
             if result == f'200: OK':
-                logger.info(f'Клиент {self._client_name}({self._address}: {self._port}) подключился к серверу с овтетом: {result}')
+                logger.info(
+                    f'Клиент {self._client_name}({self._address}: {self._port}) подключился к серверу с овтетом: {result}')
                 print(f'Установлено соединение с сервером')
-                print(f'Добро пожаловать, {self._client_name}! Консольный мессенджер готов к работе ^_^')
-                return client_socket
+                print(f'Обновляем список пользователей...')
+                # TODO: добавить обработку ошибок и вынести все в отдельную функцию подгрузки пользователей
+                try:
+                    users = load_users_from_server(client_socket, self._client_name, self._database)
+                    self._database.add_users_to_known(users)
+                    print(f'Добро пожаловать, {self._client_name}! Консольный мессенджер готов к работе ^_^')
+                    return client_socket
+                except ServerError as e:
+                    print('Не удалось загрузить список пользователей, повторите попытку позже...')
+                    logger.error(f'Пользователю {self._client_name} не удалось загрузить список пользователей: {e}')
             logger.error(f'Ошибка подключения к серверу {result}')
             print(f'Ошибка подключения к серверу {result}. Повторите попытку позже...')
             sys.exit(1)
@@ -65,11 +77,13 @@ class Client(metaclass=ClientVerifier):
 
         client_socket = self._connect()
 
-        server_receiver = threading.Thread(target=receive_message_from_server, args=(client_socket, self._client_name))
+        server_receiver = threading.Thread(target=receive_message_from_server,
+                                           args=(client_socket, self._client_name, self._database))
         server_receiver.daemon = True
         server_receiver.start()
 
-        client_interface = threading.Thread(target=user_interface, args=(client_socket, self._client_name))
+        client_interface = threading.Thread(target=user_interface,
+                                            args=(client_socket, self._client_name, self._database))
         client_interface.daemon = True
         client_interface.start()
 
@@ -84,12 +98,13 @@ class Client(metaclass=ClientVerifier):
 
 
 def main():
-
     arguments = argv_parser()
     address = arguments['address']
     port = arguments['port']
     client_name = arguments['client_name'] if arguments['client_name'] else input('Введите имя пользователя: ')
-    client = Client(address, port, client_name)
+    client_database = ClientStorage(client_name)
+
+    client = Client(address, port, client_name, client_database)
     client.run()
 
 
