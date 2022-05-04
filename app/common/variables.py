@@ -30,6 +30,10 @@ EXIT = 'exit'
 GET_USERS = 'get_users'
 GET_ACTIVE_USERS = 'get_active_users'
 GET_HISTORY = 'get_history'
+GET_CONTACTS = 'get_contacts'
+ADD_CONTACT = 'add_contact'
+DEL_CONTACT = 'del_contact'
+GET_MESSAGE_HISTORY = 'get_message_history'
 RESPONSE_DEFAULT_IP_ADDRESS = 'response_default_ip_address'
 
 # Default responses
