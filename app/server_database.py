@@ -134,7 +134,8 @@ class Storage:
         self.session.commit()
 
     def get_all_users(self) -> list:
-        return self.session.query(self.Users.username, self.Users.last_login).all()
+        users = self.session.query(self.Users.username).all()
+        return [user[0] for user in users]
 
     def get_all_active_users(self) -> list:
         return self.session.query(self.Users.username, self.ActiveUsers.ip_address, self.ActiveUsers.port,
@@ -161,12 +162,12 @@ class Storage:
 
         self.session.commit()
 
-    def add_contact(self, user_name: str, contact_name: str) -> None | bool:
+    def add_contact(self, user_name: str, contact_name: str) -> None:
         user = self.session.query(self.Users).filter_by(username=user_name).first()
         contact = self.session.query(self.Users).filter_by(username=contact_name).first()
 
         if not contact or self.session.query(self.UsersContacts).filter_by(user=user.id, contact=contact.id).count():
-            return False
+            raise ValueError
 
         record = self.UsersContacts(user.id, contact.id)
         self.session.add(record)
@@ -177,7 +178,7 @@ class Storage:
         contact = self.session.query(self.Users).filter_by(username=contact_name).first()
 
         if not contact:
-            return False
+            return ValueError
 
         self.session.query(self.UsersContacts).filter_by(user=user.id, contact=contact.id).delete()
 
