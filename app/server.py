@@ -10,7 +10,7 @@ import time
 from common.logger import log
 from common.variables import USER, ACTION, ACCOUNT_NAME, RESPONSE, ERROR, TIME, PRESENCE, MESSAGE, MESSAGE_TEXT, \
     DESTINATION, SENDER, EXIT, RESPONSE_200, RESPONSE_400, GET_HISTORY, GET_USERS, GET_ACTIVE_USERS, TARGET, \
-    DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION, SERVER_DATABASE
+    DEFAULT_PORT, MAX_CONNECTIONS, SERVER_TIMEOUT, DESTINATION, SERVER_DATABASE, GET_CONTACTS, ADD_CONTACT, DEL_CONTACT
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
@@ -21,13 +21,11 @@ from metaclasses import ServerVerifier
 from descriptors import Port
 from server_database import Storage
 
-from server_gui import MainWindow,  MessagesStats, ConfigWindow, create_messages_stats_model, \
+from server_gui import MainWindow, MessagesStats, ConfigWindow, create_messages_stats_model, \
     create_active_clients_model
-
 
 # Logger initialization
 logger = logging.getLogger('server_logger')
-
 
 new_connection_lock = threading.Lock()
 new_connection = False
@@ -57,6 +55,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
     def create_confirm_exit_message(self, client_name):
         message = {
             ACTION: EXIT,
+            RESPONSE: 200,
             TIME: time.time(),
             SENDER: client_name,
         }
@@ -65,7 +64,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
 
     @log
     def _process_client_message(self, message: dict, client: socket, messages: list, clients: list, client_names: dict,
-                               database: Storage):
+                                database: Storage):
         """"""
         global new_connection
         logger.debug(f'Обработка сообщения от клиента : {message}')
@@ -88,21 +87,21 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 return
             elif message[ACTION] == MESSAGE and MESSAGE_TEXT in message and DESTINATION in message:
                 messages.append(message)
-                return
+                database.update_users_message_stats(sender_name=message[SENDER], recipient_name=message[DESTINATION])
             elif message[ACTION] == GET_USERS:
                 users = database.get_all_users()
                 response = {
                     ACTION: GET_USERS,
-                    MESSAGE_TEXT: ''
+                    RESPONSE: 200,
+                    MESSAGE_TEXT: users
                 }
-                for user in users:
-                    response[MESSAGE_TEXT] += f'Пользователь: {user.username} (последний логин - {user.last_login})\n'
                 send_message(client, response)
                 return
             elif message[ACTION] == GET_ACTIVE_USERS:
                 users = database.get_all_active_users()
                 response = {
                     ACTION: GET_USERS,
+                    RESPONSE: 200,
                     MESSAGE_TEXT: ''
                 }
                 for user in users:
@@ -110,10 +109,54 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                         MESSAGE_TEXT] += f'Пользователь: имя - {user.username}, ip - {user.ip_address}:{user.port} (время логина - {user.login_time})\n'
                 send_message(client, response)
                 return
+            elif message[ACTION] == GET_CONTACTS:
+                contacts = database.get_contacts(message[SENDER])
+                response = {
+                    ACTION: GET_CONTACTS,
+                    RESPONSE: 200,
+                    MESSAGE_TEXT: ''
+                }
+                for contact_name in contacts:
+                    response[MESSAGE_TEXT] += f'{contact_name}\n'
+                send_message(client, response)
+                return
+            elif message[ACTION] == ADD_CONTACT:
+                try:
+                    self._database.add_contact(message[SENDER], message[TARGET])
+                    response = {
+                        ACTION: ADD_CONTACT,
+                        RESPONSE: 200,
+                        TARGET: message[TARGET],
+                        TIME: time.time(),
+                        SENDER: message[SENDER]
+                    }
+                    send_message(client, response)
+                except ValueError as e:
+                    response = RESPONSE_400
+                    response[ERROR] = 'Пользователь уже добавлен в контакты!'
+                    send_message(client, RESPONSE_400)
+                return
+            elif message[ACTION] == DEL_CONTACT:
+                try:
+                    self._database.remove_contact(message[SENDER], message[TARGET])
+                    response = {
+                        ACTION: DEL_CONTACT,
+                        RESPONSE: 200,
+                        TARGET: message[TARGET],
+                        TIME: time.time(),
+                        SENDER: message[SENDER]
+                    }
+                    send_message(client, response)
+                except ValueError as e:
+                    response = RESPONSE_400
+                    response[ERROR] = 'Пользователь уже добавлен в контакты!'
+                    send_message(client, RESPONSE_400)
+                return
             elif message[ACTION] == GET_HISTORY:
                 # if MESSAGE[TARGET]:
                 response = {
                     ACTION: GET_HISTORY,
+                    RESPONSE: 200,
                     MESSAGE_TEXT: ''
                 }
                 history = database.get_login_history(message[TARGET])
@@ -159,7 +202,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                     f'Если адрес не указан, принимаются соединения с любых адресов.')
 
         print(f'Сервер запущен!\n'
-              f'Данные для подключения: {self._address if  self._address else "127.0.0.1" }:{self._port}')
+              f'Данные для подключения: {self._address if self._address else "127.0.0.1"}:{self._port}')
 
         while True:
             # Connect clients
@@ -188,7 +231,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 for client in recv_data_lst:
                     try:
                         self._process_client_message(get_message(client), client, self._messages, self._clients,
-                                               self._client_names, self._database)
+                                                     self._client_names, self._database)
                     except IncorrectDataRecivedError:
                         logger.error(f'От клиента {client.getpeername()} приняты некорректные данные. '
                                      f'Соединение закрывается.')
@@ -257,13 +300,14 @@ def main():
             global config_window
             config_window = ConfigWindow()
             config_window.db_path.insert(SERVER_DATABASE)
-            config_window.db_file.insert('In progress...') #TODO: разделить путь от имени файла в найстроках, либо убрать имя файла из окна конфига
+            config_window.db_file.insert(
+                'In progress...')  # TODO: разделить путь от имени файла в найстроках, либо убрать имя файла из окна конфига
             config_window.ip.insert(address)
             config_window.port.insert(str(port))
             config_window.save_btn.clicked.connect(save_config)
             config_window.show()
 
-        def save_config() -> None: #TODO: доработать настройку конфига через интерфейс + перезапуск после сохранения
+        def save_config() -> None:  # TODO: доработать настройку конфига через интерфейс + перезапуск после сохранения
             global config_window
             message = QMessageBox()
             message.information(config_window, 'ОК', 'Найстройки успешно сохранены')
@@ -286,8 +330,6 @@ def main():
         server_app.exec_()
     except Exception as e:
         print(e)
-
-
 
 
 if __name__ == '__main__':
