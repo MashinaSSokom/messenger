@@ -27,7 +27,6 @@ def create_active_clients_model(db: Storage) -> QStandardItemModel:
 
 def create_messages_stats_model(db: Storage) -> QStandardItemModel:
     messages_stats = db.get_messages_stats()
-
     messages_stats_model = QStandardItemModel()
     messages_stats_model.setHorizontalHeaderLabels(
         ['Имя клиента', 'Время последнего входа', 'Сообщений отправлено', 'Сообщений принято']
