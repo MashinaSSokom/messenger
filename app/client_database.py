@@ -26,8 +26,8 @@ class ClientStorage:
             self.id = None
             self.contact_name = contact_name
 
-    def __init__(self, name):
-        self.db_engine = create_engine(f'sqlite:///client_{name}.db3', echo=False, pool_recycle=7200,
+    def __init__(self, username):
+        self.db_engine = create_engine(f'sqlite:///client_{username}.db3', echo=False, pool_recycle=7200,
                                        connect_args={'check_same_thread': False})
         self.metadata = MetaData()
 
@@ -62,10 +62,11 @@ class ClientStorage:
         self.session = session()
 
         # Cleat Active_users table after reload server
-        self.session.query(self.Contacts).delete()
+        self.session.query(self.KnownUsers).delete()
         self.session.commit()
 
     def add_contact(self, contact_name: str) -> None:
+        # TODO: Проверить что пользователь не добавляет сам себя
         if not self.session.query(self.Contacts).filter_by(contact_name=contact_name).first():
             contact = self.Contacts(contact_name)
             self.session.add(contact)
@@ -73,6 +74,7 @@ class ClientStorage:
 
     def del_contact(self, contact_name: str) -> None:
         self.session.query(self.Contacts).filter_by(contact_name=contact_name).delete()
+        self.session.commit()
 
     def add_users_to_known(self, users_list: list[str]) -> None:
         self.session.query(self.KnownUsers).delete()
@@ -117,19 +119,19 @@ class ClientStorage:
 
 
 if __name__ == '__main__':
-    test_db = ClientStorage('test1')
-    for i in ['test3', 'test4', 'test5']:
-        test_db.add_contact(i)
-    test_db.add_contact('test4')
-    test_db.add_users_to_known(['test1', 'test2', 'test3', 'test4', 'test5'])
-    test_db.save_message('test1', 'test2', f'Привет! я тестовое сообщение от {datetime.datetime.now()}!')
-    test_db.save_message('test2', 'test1', f'Привет! я другое тестовое сообщение от {datetime.datetime.now()}!')
-    print(test_db.get_contacts())
-    print(test_db.get_known_users())
-    print(test_db.check_is_known_user('test1'))
-    print(test_db.check_is_known_user('test10'))
-    print(test_db.get_message_history('test2'))
-    print(test_db.get_message_history(recipient='test2'))
-    print(test_db.get_message_history('test3'))
-    test_db.del_contact('test4')
-    print(test_db.get_contacts())
+    test_db = ClientStorage('client_1')
+    # test_db.add_contact('test4')
+    # test_db.add_users_to_known(['test1', 'test2', 'test3', 'test4', 'test5'])
+    # test_db.save_message('test1', 'test2', f'Привет! я тестовое сообщение от {datetime.datetime.now()}!')
+    # test_db.save_message('test2', 'test1', f'Привет! я другое тестовое сообщение от {datetime.datetime.now()}!')
+    # print(test_db.get_contacts())
+    # print(test_db.get_known_users())
+    # print(test_db.check_is_known_user('test1'))
+    # print(test_db.check_is_known_user('test10'))
+    # print(test_db.get_message_history('test2'))
+    # print(test_db.get_message_history(recipient='test2'))
+    # print(test_db.get_message_history('test3'))
+    # test_db.del_contact('test4')
+    # print(test_db.get_contacts())
+    # print(test_db.get_contacts())
+    # print(test_db.check_is_contact('client_2'))
