@@ -2,16 +2,68 @@ import sys
 import json
 import logging
 
-from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView
+from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView, QDialog, QLabel, QComboBox, \
+    QPushButton
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QBrush, QColor
 from PyQt5.QtCore import pyqtSlot, QEvent, Qt
 
 from client_gui_conv import Ui_MainClientWindow
 from client_database import ClientStorage
-
-
+from common.errors import ServerError
 
 logger = logging.getLogger('client_logger')
+
+
+class AddContactDialog(QDialog):
+    def __init__(self, transport, database):
+        super().__init__()
+        self.transport = transport
+        self.database = database
+
+        self.setFixedSize(350, 120)
+        self.setWindowTitle('Выберите контакт для добавления:')
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setModal(True)
+
+        self.selector_label = QLabel('Выберите контакт для добавления:', self)
+        self.selector_label.setFixedSize(200, 20)
+        self.selector_label.move(10, 0)
+
+        self.selector = QComboBox(self)
+        self.selector.setFixedSize(200, 20)
+        self.selector.move(10, 30)
+
+        self.btn_refresh = QPushButton('Обновить список', self)
+        self.btn_refresh.setFixedSize(100, 30)
+        self.btn_refresh.move(60, 60)
+
+        self.btn_ok = QPushButton('Добавить', self)
+        self.btn_ok.setFixedSize(100, 30)
+        self.btn_ok.move(230, 20)
+
+        self.btn_cancel = QPushButton('Отмена', self)
+        self.btn_cancel.setFixedSize(100, 30)
+        self.btn_cancel.move(230, 60)
+        self.btn_cancel.clicked.connect(self.close)
+
+        self._update_possible_contacts()
+        self.btn_refresh.clicked.connect(self._update_users_and_contacts_from_server)
+
+    def _update_possible_contacts(self):
+        self.selector.clear()
+        contacts_list = set(self.database.get_contacts())
+        users_list = set(self.database.get_users())
+        users_list.remove(self.transport.username)
+        self.selector.addItems(users_list - contacts_list)
+
+    def _update_users_and_contacts_from_server(self):
+        try:
+            self.transport.user_list_update()
+        except OSError:
+            pass
+        else:
+            logger.debug('Обновление списка пользователей с сервера выполнено')
+            self._update_possible_contacts()
 
 
 class ClientMainWindow(QMainWindow):
@@ -75,3 +127,4 @@ class ClientMainWindow(QMainWindow):
 
         # Заполняем окно историю сообщений по требуемому пользователю.
         self._history_list_update()
+
