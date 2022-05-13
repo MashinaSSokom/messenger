@@ -7,7 +7,6 @@ import logging
 import json
 import threading
 
-from common.variables import MESSAGE
 from logs import config_client_log
 from common.client_utils import create_presence, process_response, \
     receive_message_from_server, user_interface, load_users_from_server
@@ -15,7 +14,7 @@ from common.client_utils import create_presence, process_response, \
 from common.utils import argv_parser, get_message, send_message
 from common.errors import ReqFieldMissingError, ServerError
 from metaclasses import ClientVerifier
-from client_database import ClientStorage
+from client.client_database import ClientStorage
 
 logger = logging.getLogger('client_logger')
 
