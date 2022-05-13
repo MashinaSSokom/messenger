@@ -21,7 +21,7 @@ from metaclasses import ServerVerifier
 from descriptors import Port
 from server_database import Storage
 
-from server_gui import MainWindow, MessagesStats, ConfigWindow, create_messages_stats_model, \
+from server_gui import ServerMainWindow, MessagesStats, ConfigWindow, create_messages_stats_model, \
     create_active_clients_model
 
 # Logger initialization
@@ -282,7 +282,7 @@ def main():
         server.start()
 
         server_app = QApplication(sys.argv)
-        main_window = MainWindow()
+        main_window = ServerMainWindow()
         main_window.statusBar().showMessage('Сервер запущен!')
         main_window.active_clients_table.setModel(create_active_clients_model(db))
         main_window.active_clients_table.resizeColumnsToContents()

@@ -47,9 +47,9 @@ def create_messages_stats_model(db: Storage) -> QStandardItemModel:
     return messages_stats_model
 
 
-class MainWindow(QMainWindow):
+class ServerMainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super(ServerMainWindow, self).__init__()
         self.init_ui()
 
     def init_ui(self):
@@ -187,7 +187,7 @@ class ConfigWindow(QDialog):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
-    ex = MainWindow()
+    ex = ServerMainWindow()
     ex.statusBar().showMessage('Тестовое сообщение')
     timer = QTimer()
     timer.timeout.connect(ex.statusBar().clearMessage)
