@@ -124,3 +124,18 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
         with socket_lock:
             send_message(self._transport, request)
             self._process_response(get_message(self._transport))
+
+    @log
+    def send_message(self, destination, message_text):
+        logger.debug(f'{self._client_name}: попытка отправить сообщение пользователю{destination}')
+        request = {
+            ACTION: MESSAGE,
+            TIME: time.time(),
+            USER: {ACCOUNT_NAME: self._client_name},
+            SENDER: self._client_name,
+            DESTINATION: destination,
+            MESSAGE_TEXT: message_text
+        }
+        with socket_lock:
+            send_message(self._transport, request)
+            self._process_response(get_message(self._transport))
