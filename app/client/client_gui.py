@@ -119,7 +119,7 @@ class ClientMainWindow(QMainWindow):
         self.ui.list_messages.setWordWrap(True)
 
         self._contacts_model = None
-        self._history_model = None
+        self._message_history_model = None
         self._messages = QMessageBox()
         self._current_chat = None
 
@@ -131,8 +131,8 @@ class ClientMainWindow(QMainWindow):
     def _reset_inputs(self):
         self.ui.label_new_message.setText('Для выбора получателя используйте двойной левый клик')
         self.ui.text_message.clear()
-        if self._history_model:
-            self._history_model.clear()
+        if self._message_history_model:
+            self._message_history_model.clear()
 
         self.ui.btn_clear.setDisabled(True)
         self.ui.btn_send.setDisabled(True)
@@ -156,7 +156,7 @@ class ClientMainWindow(QMainWindow):
         self.ui.text_message.setDisabled(False)
 
         # Заполняем окно историю сообщений по требуемому пользователю.
-        self._history_list_update()
+        self._message_history_list_update()
 
     def _add_contact_window(self):
         global add_contact_dialog
@@ -234,4 +234,30 @@ class ClientMainWindow(QMainWindow):
         else:
             self.db.save_message(sender=self.transport.username, recipient=self._current_chat, message=message_text)
             logger.debug(f'Отправлено сообщение для {self._current_chat}: {message_text}')
-            self._history_list_update()
+            self._message_history_list_update()
+
+    def _message_history_list_update(self):
+        history = sorted(self.db.get_message_history(recipient=self._current_chat), key=lambda item: item[3])
+        if not self._message_history_model:
+            self._message_history_model = QStandardItemModel()
+            self.ui.list_messages.setModel(self._message_history_model)
+        self._message_history_model.clear()
+        start_index = 0
+        if len(history) > 20:
+            start_index = len(history) - 20
+
+        for i in range(start_index, len(history)):
+            record = history[i]
+            if record[1] == self._current_chat:
+                message = QStandardItem(f'Входящее сообщение от {record[3].replace(microsecond=0)}:\n{record[2]}')
+                message.setEditable(False)
+                message.setBackground(QBrush(QColor(255, 213, 213)))
+                message.setTextAlignment(Qt.AlignLeft)
+                self._message_history_model.appendRow(message)
+            else:
+                message = QStandardItem(f'Исходящее сообщение от {record[3].replace(microsecond=0)}:\n{record[2]}')
+                message.setEditable(False)
+                message.setBackground(QBrush(QColor(204, 255, 204)))
+                message.setTextAlignment(Qt.AlignRight)
+                self._message_history_model.appendRow(message)
+        self.ui.list_messages.scrollToBottom()
