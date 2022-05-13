@@ -65,3 +65,13 @@ class ClientMainWindow(QMainWindow):
             self._contacts_model.appendRow(contact_item)
         self.ui.list_contacts.setModel(self._contacts_model)
 
+    def _select_active_user(self):
+        self.current_chat = self.ui.list_contacts.currentIndex().data()
+        # вызываем основную функцию
+        self.ui.label_new_message.setText(f'Введите сообщенние для {self.current_chat}:')
+        self.ui.btn_clear.setDisabled(False)
+        self.ui.btn_send.setDisabled(False)
+        self.ui.text_message.setDisabled(False)
+
+        # Заполняем окно историю сообщений по требуемому пользователю.
+        self._history_list_update()
