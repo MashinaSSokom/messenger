@@ -5,7 +5,8 @@ import logging
 import sys
 import threading
 
-from client_database import ClientStorage
+
+from client.client_database import ClientStorage
 from .logger import log
 from .variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, EXIT, SENDER, \
     DESTINATION, GET_USERS, GET_ACTIVE_USERS, GET_HISTORY, TARGET, ADD_CONTACT, DEL_CONTACT, GET_MESSAGE_HISTORY, \
