@@ -128,3 +128,31 @@ class ClientMainWindow(QMainWindow):
         # Заполняем окно историю сообщений по требуемому пользователю.
         self._history_list_update()
 
+    def _add_contact_window(self):
+        global add_contact_dialog
+        add_contact_dialog = AddContactDialog(self.transport, self.db)
+        add_contact_dialog.btn_ok.clicked.connect(self._add_contact_process(add_contact_dialog))
+        add_contact_dialog.show()
+
+    def _add_contact_process(self, ui_item):
+        new_contact = ui_item.selector.currentText()
+        self._add_contact(new_contact)
+        ui_item.close()
+
+    def _add_contact(self, new_contact):
+        try:
+            self.transport.add_contact(new_contact)
+        except ServerError as e:
+            self._messages.critical(self, 'Ошибка сервера!', e.text)
+        except OSError as e:
+            if e.errno:
+                self._messages.critical(self, 'Ошибка', 'Потеряно соединение с сервером!')
+                self.close()
+            self._messages.critical(self, 'Ошибка', 'Таймаут соединения!')
+        else:
+            self.db.add_contact(new_contact)
+            new_contact_item = QStandardItem(new_contact)
+            new_contact_item.setEditable(False)
+            self._contacts_model.appendRow(new_contact_item)
+            logger.debug(f'Успшно добавлен контакт {new_contact_item}')
+            self._messages.information(self, 'Успешно!', 'Контакт добавлен ')
