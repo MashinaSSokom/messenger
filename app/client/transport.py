@@ -111,5 +111,16 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
             send_message(self._transport, request)
             self._process_response(get_message(self._transport))
 
-
-        
+    @log
+    def del_contact(self, contact_to_delete):
+        logger.debug(f'Клиент {self._client_name} удаляет контакт {contact_to_delete}')
+        request = {
+            ACTION: DEL_CONTACT,
+            TARGET: contact_to_delete,
+            TIME: time.time(),
+            SENDER: self._client_name,
+            USER: {ACCOUNT_NAME: self._client_name}
+        }
+        with socket_lock:
+            send_message(self._transport, request)
+            self._process_response(get_message(self._transport))
