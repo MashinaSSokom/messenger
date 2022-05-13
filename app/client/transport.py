@@ -96,3 +96,20 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
                 raise ServerError(f'{response[ERROR]}')
             else:
                 logger.debug(f'Принят неизвестный код ответа {response[RESPONSE]}')
+
+    @log
+    def add_contact(self, new_contact):
+        logger.debug(f'Клиент {self._client_name} добавляет в контакты {new_contact}')
+        request = {
+            ACTION: ADD_CONTACT,
+            TARGET: new_contact,
+            TIME: time.time(),
+            SENDER: self._client_name,
+            USER: {ACCOUNT_NAME: self._client_name}
+        }
+        with socket_lock:
+            send_message(self._transport, request)
+            self._process_response(get_message(self._transport))
+
+
+        
