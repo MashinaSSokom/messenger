@@ -214,3 +214,24 @@ class ClientMainWindow(QMainWindow):
                 self._current_chat = None
                 self._reset_inputs()
 
+    def _send_message(self):
+        message_text = self.ui.text_message.toPlainText()
+        if not message_text:
+            return
+        self.ui.text_message.clear()
+        try:
+            self.transport.send_message(self._current_chat, message_text)
+        except ServerError as err:
+            self._messages.critical(self, 'Ошибка', err.text)
+        except OSError as err:
+            if err.errno:
+                self._messages.critical(self, 'Ошибка', 'Потеряно соединение с сервером!')
+                self.close()
+            self._messages.critical(self, 'Ошибка', 'Таймаут соединения!')
+        except (ConnectionResetError, ConnectionAbortedError):
+            self._messages.critical(self, 'Ошибка', 'Потеряно соединение с сервером!')
+            self.close()
+        else:
+            self.db.save_message(sender=self.transport.username, recipient=self._current_chat, message=message_text)
+            logger.debug(f'Отправлено сообщение для {self._current_chat}: {message_text}')
+            self._history_list_update()
