@@ -131,7 +131,7 @@ class ClientMainWindow(QMainWindow):
     def _add_contact_window(self):
         global add_contact_dialog
         add_contact_dialog = AddContactDialog(self.transport, self.db)
-        add_contact_dialog.btn_ok.clicked.connect(self._add_contact_process(add_contact_dialog))
+        add_contact_dialog.btn_ok.clicked.connect(lambda: self._add_contact_process(add_contact_dialog))
         add_contact_dialog.show()
 
     def _add_contact_process(self, ui_item):
