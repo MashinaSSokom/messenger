@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListV
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QBrush, QColor
 from PyQt5.QtCore import pyqtSlot, QEvent, Qt
 
+from client.transport import ClientTransport
 from client_gui_conv import Ui_MainClientWindow
 from client_database import ClientStorage
 from common.errors import ServerError
@@ -98,7 +99,7 @@ class DeleteContactDialog(QDialog):
 
 class ClientMainWindow(QMainWindow):
 
-    def __init__(self, db: ClientStorage, transport):
+    def __init__(self, db: ClientStorage, transport: ClientTransport):
         super(ClientMainWindow, self).__init__()
 
         self.db = db
@@ -235,7 +236,7 @@ class ClientMainWindow(QMainWindow):
             self._messages.critical(self, 'Ошибка', 'Потеряно соединение с сервером!')
             self.close()
         else:
-            self.db.save_message(sender=self.transport.username, recipient=self._current_chat, message=message_text)
+            self.db.save_message(sender=self.transport._client_name, recipient=self._current_chat, message=message_text)
             logger.debug(f'Отправлено сообщение для {self._current_chat}: {message_text}')
             self._message_history_list_update()
 
@@ -277,7 +278,9 @@ class ClientMainWindow(QMainWindow):
                     self._set_active_user()
 
             else:
-                if self._messages.question(self, 'Новое сообщение', f'Получено сообщение от {sender}, \n Данного пользователя нет в вашем контакт-листе.\n Добавить в контакты и открыть чат?',
+                if self._messages.question(self, 'Новое сообщение',
+                                           f'Получено сообщение от {sender}, \n Данного пользователя нет в вашем '
+                                           f'контакт-листе.\n Добавить в контакты и открыть чат?',
                                            QMessageBox.Yes, QMessageBox.No) == QMessageBox.Yes:
                     self._add_contact(sender)
                     self._current_chat = sender
