@@ -148,9 +148,9 @@ class ClientMainWindow(QMainWindow):
         self.ui.list_contacts.setModel(self._contacts_model)
 
     def _select_active_user(self):
-        self.current_chat = self.ui.list_contacts.currentIndex().data()
+        self._current_chat = self.ui.list_contacts.currentIndex().data()
         # вызываем основную функцию
-        self.ui.label_new_message.setText(f'Введите сообщенние для {self.current_chat}:')
+        self.ui.label_new_message.setText(f'Введите сообщенние для {self._current_chat}:')
         self.ui.btn_clear.setDisabled(False)
         self.ui.btn_send.setDisabled(False)
         self.ui.text_message.setDisabled(False)
@@ -186,3 +186,31 @@ class ClientMainWindow(QMainWindow):
             self._contacts_model.appendRow(new_contact_item)
             logger.debug(f'Успшно добавлен контакт {new_contact_item}')
             self._messages.information(self, 'Успешно!', 'Контакт добавлен ')
+
+    def _delete_contact_window(self):
+        global delete_contact_dialog
+        delete_contact_dialog = AddContactDialog(self.db)
+        delete_contact_dialog.btn_ok.clicked.connect(lambda: self._delete_contact(delete_contact_dialog))
+        delete_contact_dialog.show()
+
+    def _delete_contact(self, ui_item):
+        contact_to_delete = ui_item.selector.currentText()
+        try:
+            self.transport.del_contact(contact_to_delete)
+        except ServerError as e:
+            self._messages.critical(self, 'Ошибка сервера!', e.text)
+        except OSError as e:
+            if e.errno:
+                self._messages.critical(self, 'Ошибка', 'Потеряно соединение с сервером!')
+                self.close()
+            self._messages.critical(self, 'Ошибка', 'Таймаут соединения!')
+        else:
+            self.db.del_contact(contact_to_delete)
+            self._contacts_list_update()
+            logger.debug(f'Успшно удален контакт {contact_to_delete}')
+            self._messages.information(self, 'Успешно!', 'Контакт удален ')
+            ui_item.close()
+            if contact_to_delete == self._current_chat:
+                self._current_chat = None
+                self._reset_inputs()
+
