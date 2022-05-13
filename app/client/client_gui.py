@@ -149,6 +149,9 @@ class ClientMainWindow(QMainWindow):
 
     def _select_active_user(self):
         self._current_chat = self.ui.list_contacts.currentIndex().data()
+        self._set_active_user()
+
+    def _set_active_user(self):
         # вызываем основную функцию
         self.ui.label_new_message.setText(f'Введите сообщенние для {self._current_chat}:')
         self.ui.btn_clear.setDisabled(False)
@@ -261,3 +264,30 @@ class ClientMainWindow(QMainWindow):
                 message.setTextAlignment(Qt.AlignRight)
                 self._message_history_model.appendRow(message)
         self.ui.list_messages.scrollToBottom()
+
+    @pyqtSlot(str)
+    def new_message(self, sender):
+        if sender == self._current_chat:
+            self._message_history_list_update()
+        else:
+            if self.db.check_is_contact(sender):
+                if self._messages.question(self, 'Новое сообщение', f'Получено сообщение от {sender}, открыть чат?',
+                                           QMessageBox.Yes, QMessageBox.No) == QMessageBox.Yes:
+                    self._current_chat = sender
+                    self._set_active_user()
+
+            else:
+                if self._messages.question(self, 'Новое сообщение', f'Получено сообщение от {sender}, \n Данного пользователя нет в вашем контакт-листе.\n Добавить в контакты и открыть чат?',
+                                           QMessageBox.Yes, QMessageBox.No) == QMessageBox.Yes:
+                    self._add_contact(sender)
+                    self._current_chat = sender
+                    self._set_active_user()
+
+    @pyqtSlot()
+    def lost_connection(self):
+        self._messages.warning(self, 'Сбой', 'Потеряно соедние с сервером')
+        self.close()
+
+    def male_connection(self, transport):
+        transport.new_message.connect(self.new_message)
+        transport.lost_connection.connect(self.lost_connection)
