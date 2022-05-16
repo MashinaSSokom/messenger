@@ -23,7 +23,7 @@ socket_lock = threading.Lock()
 
 class ClientTransport(threading.Thread, QObject):
     # Signals
-    new_messasge = pyqtSignal(str)
+    new_message = pyqtSignal(str)
     lost_connection = pyqtSignal()
 
     def __init__(self, address: str, port: int, client_name: str, database: ClientStorage):
@@ -116,7 +116,6 @@ class ClientTransport(threading.Thread, QObject):
             send_message(self._transport, request)
             response = get_message(self._transport)
         if response[RESPONSE] == 200:
-            print(response)
             for contact in response[MESSAGE_TEXT]:
                 self._database.add_contact(contact)
         else:
@@ -138,16 +137,16 @@ class ClientTransport(threading.Thread, QObject):
         logger.debug(f'Разбор ответа от сервера: {response}')
         if RESPONSE in response:
             if response[RESPONSE] == 200:
-                if ACTION in response and response[ACTION] == MESSAGE and SENDER in response and DESTINATION in response \
-                        and MESSAGE_TEXT in response and response[DESTINATION] == self._client_name:
-                    self._database.save_message(sender=response[SENDER], recipient=response[self._client_name],
-                                                message=response[MESSAGE_TEXT])
-                    self.new_messasge.emit(response[SENDER])
                 return f'200: OK'
             elif response[RESPONSE] == 400:
                 raise ServerError(f'{response[ERROR]}')
             else:
                 logger.debug(f'Принят неизвестный код ответа {response[RESPONSE]}')
+        elif ACTION in response and response[ACTION] == MESSAGE and SENDER in response and DESTINATION in response \
+                and MESSAGE_TEXT in response and response[DESTINATION] == self._client_name:
+            self._database.save_message(sender=response[SENDER], recipient=self._client_name,
+                                        message=response[MESSAGE_TEXT])
+            self.new_message.emit(response[SENDER])
 
     @log
     def add_contact(self, new_contact):
