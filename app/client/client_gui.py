@@ -3,20 +3,20 @@ import json
 import logging
 
 from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView, QDialog, QLabel, QComboBox, \
-    QPushButton
+    QPushButton, QLineEdit
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QBrush, QColor
 from PyQt5.QtCore import pyqtSlot, QEvent, Qt
 
 from client.transport import ClientTransport
-from client_gui_conv import Ui_MainClientWindow
-from client_database import ClientStorage
+from .client_gui_conv import Ui_MainClientWindow
+from .client_database import ClientStorage
 from common.errors import ServerError
 
 logger = logging.getLogger('client_logger')
 
 
 class AddContactDialog(QDialog):
-    def __init__(self, transport, database):
+    def __init__(self, transport: ClientTransport, database: ClientStorage):
         super().__init__()
         self.transport = transport
         self.database = database
@@ -53,8 +53,8 @@ class AddContactDialog(QDialog):
     def _update_possible_contacts(self):
         self.selector.clear()
         contacts_list = set(self.database.get_contacts())
-        users_list = set(self.database.get_users())
-        users_list.remove(self.transport.username)
+        users_list = set(self.database.get_known_users())
+        users_list.remove(self.transport._client_name)
         self.selector.addItems(users_list - contacts_list)
 
     def _update_users_and_contacts_from_server(self):
@@ -95,6 +95,40 @@ class DeleteContactDialog(QDialog):
         self.btn_cancel.clicked.connect(self.close)
 
         self.selector.addItems(sorted(self.database.get_contacts()))
+
+
+class ClientNameDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.ok_pressed = False
+
+        self.setWindowTitle('Привет!')
+        self.setFixedSize(175, 93)
+
+        self.label = QLabel('Введите имя пользователя:', self)
+        self.label.move(10, 10)
+        self.label.setFixedSize(150, 10)
+
+        self.client_name = QLineEdit(self)
+        self.client_name.setFixedSize(154, 20)
+        self.client_name.move(10, 30)
+
+        self.btn_ok = QPushButton('Начать', self)
+        self.btn_ok.move(10, 60)
+        self.btn_ok.clicked.connect(self.click)
+
+        self.btn_cancel = QPushButton('Выход', self)
+        self.btn_cancel.move(90, 60)
+        self.btn_cancel.clicked.connect(qApp.exit)
+
+        self.show()
+
+    # Обработчик кнопки ОК, если поле вводе не пустое, ставим флаг и завершаем приложение.
+    def click(self):
+        if self.client_name.text():
+            self.ok_pressed = True
+            qApp.exit()
 
 
 class ClientMainWindow(QMainWindow):
@@ -158,7 +192,6 @@ class ClientMainWindow(QMainWindow):
         self.ui.btn_clear.setDisabled(False)
         self.ui.btn_send.setDisabled(False)
         self.ui.text_message.setDisabled(False)
-
         # Заполняем окно историю сообщений по требуемому пользователю.
         self._message_history_list_update()
 
@@ -193,7 +226,7 @@ class ClientMainWindow(QMainWindow):
 
     def _delete_contact_window(self):
         global delete_contact_dialog
-        delete_contact_dialog = AddContactDialog(self.db)
+        delete_contact_dialog = DeleteContactDialog(self.db)
         delete_contact_dialog.btn_ok.clicked.connect(lambda: self._delete_contact(delete_contact_dialog))
         delete_contact_dialog.show()
 
@@ -266,7 +299,7 @@ class ClientMainWindow(QMainWindow):
                 self._message_history_model.appendRow(message)
         self.ui.list_messages.scrollToBottom()
 
-    @pyqtSlot(str)
+    @pyqtSlot()
     def new_message(self, sender):
         if sender == self._current_chat:
             self._message_history_list_update()
@@ -291,6 +324,6 @@ class ClientMainWindow(QMainWindow):
         self._messages.warning(self, 'Сбой', 'Потеряно соедние с сервером')
         self.close()
 
-    def male_connection(self, transport):
-        transport.new_message.connect(self.new_message)
+    def make_connection(self, transport):
+        # transport.new_message.connect(self.new_message)
         transport.lost_connection.connect(self.lost_connection)
