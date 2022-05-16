@@ -88,6 +88,8 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             elif message[ACTION] == MESSAGE and MESSAGE_TEXT in message and DESTINATION in message:
                 messages.append(message)
                 database.update_users_message_stats(sender_name=message[SENDER], recipient_name=message[DESTINATION])
+                send_message(client, RESPONSE_200)
+                return
             elif message[ACTION] == GET_USERS:
                 users = database.get_all_users()
                 response = {
