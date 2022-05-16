@@ -114,10 +114,10 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 response = {
                     ACTION: GET_CONTACTS,
                     RESPONSE: 200,
-                    MESSAGE_TEXT: ''
+                    MESSAGE_TEXT: contacts
                 }
-                for contact_name in contacts:
-                    response[MESSAGE_TEXT] += f'{contact_name}\n'
+                # for contact_name in contacts:
+                #     response[MESSAGE_TEXT] += f'{contact_name}\n'
                 send_message(client, response)
                 return
             elif message[ACTION] == ADD_CONTACT:
