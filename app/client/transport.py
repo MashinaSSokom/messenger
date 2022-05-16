@@ -21,7 +21,7 @@ logger = logging.getLogger('client_logger')
 socket_lock = threading.Lock()
 
 
-class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
+class ClientTransport(threading.Thread, QObject):
     # Signals
     new_messasge = pyqtSignal(str)
     lost_connection = pyqtSignal()
@@ -35,6 +35,21 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
         self._client_name = client_name
         self._database = database
         self._transport = None
+        self._connect()
+
+        try:
+            self.user_list_update()
+            self.contact_list_update()
+        except OSError as err:
+            if err.errno:
+                logger.critical(f'Потеряно соединение с сервером.')
+                raise ServerError('Потеряно соединение с сервером!')
+            logger.error('Timeout соединения при обновлении списков пользователей.')
+        except json.JSONDecodeError:
+            logger.critical(f'Потеряно соединение с сервером.')
+            raise ServerError('Потеряно соединение с сервером!')
+            # Флаг продолжения работы транспорта.
+        self._running = True
 
     def _connect(self):
         self._transport = socket(AF_INET, SOCK_STREAM)
@@ -69,6 +84,43 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
             raise ServerError(f'Потеряно соединение с сервером')
         logger.info(
             f'Клиент {self._client_name}({self._address}: {self._port}) подключился к серверу с овтетом: {result}')
+
+    @log
+    def user_list_update(self):
+        logger.debug(f'Получение списка пользователей')
+        request = {
+            ACTION: GET_USERS,
+            TIME: time.time(),
+            SENDER: self._client_name,
+            USER: {ACCOUNT_NAME: self._client_name}
+        }
+        with socket_lock:
+            send_message(self._transport, request)
+            response = get_message(self._transport)
+
+        if response[RESPONSE] == 200:
+            self._database.add_users_to_known(response[MESSAGE_TEXT])
+        else:
+            logger.error(f'Не удалось получить список пользователей: {response}')
+
+    @log
+    def contact_list_update(self):
+        logger.debug(f'Получение списка контактов')
+        request = {
+            ACTION: GET_CONTACTS,
+            TIME: time.time(),
+            SENDER: self._client_name,
+            USER: {ACCOUNT_NAME: self._client_name}
+        }
+        with socket_lock:
+            send_message(self._transport, request)
+            response = get_message(self._transport)
+        if response[RESPONSE] == 200:
+            print(response)
+            for contact in response[MESSAGE_TEXT]:
+                self._database.add_contact(contact)
+        else:
+            logger.error(f'Не удалось получить список пользователей: {response}')
 
     @log
     def _create_presence(self):
@@ -139,3 +191,46 @@ class ClientTransport(metaclass=ClientVerifier, threading.Thread, QObject):
         with socket_lock:
             send_message(self._transport, request)
             self._process_response(get_message(self._transport))
+
+    def shutdown(self):
+        self._running = False
+        request = {
+            ACTION: EXIT,
+            TIME: time.time(),
+            SENDER: self._client_name,
+            # ACCOUNT_NAME: self.username
+        }
+        with socket_lock:
+            try:
+                send_message(self._transport, request)
+            except OSError:
+                pass
+        logger.debug('Транспорт завершает работу.')
+        time.sleep(0.5)
+
+    def run(self):
+        logger.debug(f'Процесс получения сообщений с сервера запущен')
+
+        while self._running:
+            time.sleep(1)
+            with socket_lock:
+                try:
+                    self._transport.settimeout(0.5)
+                    response = get_message(self._transport)
+                except OSError as e:
+                    if e.errno:
+                        logger.critical(f'Потеряно соедниенние с сервером: {e.errno}')
+                        self._running = False
+                        self.lost_connection.emit()
+
+                except (
+                        ConnectionError, ConnectionAbortedError, ConnectionResetError, json.JSONDecodeError,
+                        TypeError) as e:
+                    logger.error(f'Потеряно соединение с сервером: {e}')
+                    self._running = False
+                    self.lost_connection.emit()
+                else:
+                    logger.debug(f'Принято сообщение с сервера: {response}')
+                    self._process_response(response)
+                finally:
+                    self._transport.settimeout(5)
