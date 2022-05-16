@@ -285,7 +285,7 @@ class ClientMainWindow(QMainWindow):
 
         for i in range(start_index, len(history)):
             record = history[i]
-            if record[1] == self._current_chat:
+            if record[0] == self._current_chat:
                 message = QStandardItem(f'Входящее сообщение от {record[3].replace(microsecond=0)}:\n{record[2]}')
                 message.setEditable(False)
                 message.setBackground(QBrush(QColor(255, 213, 213)))
@@ -299,7 +299,7 @@ class ClientMainWindow(QMainWindow):
                 self._message_history_model.appendRow(message)
         self.ui.list_messages.scrollToBottom()
 
-    @pyqtSlot()
+    @pyqtSlot(str)
     def new_message(self, sender):
         if sender == self._current_chat:
             self._message_history_list_update()
@@ -325,5 +325,5 @@ class ClientMainWindow(QMainWindow):
         self.close()
 
     def make_connection(self, transport):
-        # transport.new_message.connect(self.new_message)
+        transport.new_message.connect(self.new_message)
         transport.lost_connection.connect(self.lost_connection)

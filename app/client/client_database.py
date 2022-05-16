@@ -109,7 +109,6 @@ class ClientStorage:
         if sender and recipient:
             return False
         query = self.session.query(self.MessageHistory)
-
         if sender or recipient:
             query = self.session.query(self.MessageHistory).filter(or_(self.MessageHistory.recipient == recipient, self.MessageHistory.sender == recipient))
         # elif recipient:
