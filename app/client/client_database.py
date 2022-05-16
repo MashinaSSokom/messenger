@@ -4,6 +4,7 @@ import datetime
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
 from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy import or_
 from common.variables import SERVER_DATABASE
 
 
@@ -107,12 +108,13 @@ class ClientStorage:
     def get_message_history(self, sender=None, recipient=None) -> list | bool:
         if sender and recipient:
             return False
+        print(sender, recipient)
         query = self.session.query(self.MessageHistory)
 
         if sender or recipient:
-            query = self.session.query(self.MessageHistory).filter(
-                self.MessageHistory.sender == sender | self.MessageHistory.recipient == recipient)
-
+            print(self.session.query(self.MessageHistory).filter(or_(self.MessageHistory.recipient == recipient, self.MessageHistory.sender == recipient)).all())
+            query = self.session.query(self.MessageHistory).filter(or_(self.MessageHistory.recipient == recipient, self.MessageHistory.sender == recipient))
+        print('Запрос', query)
         # elif recipient:
         #     query = self.session.query(self.MessageHistory).filter_by(recipient=recipient)
 
