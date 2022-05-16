@@ -108,13 +108,10 @@ class ClientStorage:
     def get_message_history(self, sender=None, recipient=None) -> list | bool:
         if sender and recipient:
             return False
-        print(sender, recipient)
         query = self.session.query(self.MessageHistory)
 
         if sender or recipient:
-            print(self.session.query(self.MessageHistory).filter(or_(self.MessageHistory.recipient == recipient, self.MessageHistory.sender == recipient)).all())
             query = self.session.query(self.MessageHistory).filter(or_(self.MessageHistory.recipient == recipient, self.MessageHistory.sender == recipient))
-        print('Запрос', query)
         # elif recipient:
         #     query = self.session.query(self.MessageHistory).filter_by(recipient=recipient)
 
