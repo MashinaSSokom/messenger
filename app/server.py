@@ -21,7 +21,7 @@ from metaclasses import ServerVerifier
 from descriptors import Port
 from server_database import Storage
 
-from server_gui import MainWindow, MessagesStats, ConfigWindow, create_messages_stats_model, \
+from server_gui import ServerMainWindow, MessagesStats, ConfigWindow, create_messages_stats_model, \
     create_active_clients_model
 
 # Logger initialization
@@ -88,6 +88,8 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             elif message[ACTION] == MESSAGE and MESSAGE_TEXT in message and DESTINATION in message:
                 messages.append(message)
                 database.update_users_message_stats(sender_name=message[SENDER], recipient_name=message[DESTINATION])
+                send_message(client, RESPONSE_200)
+                return
             elif message[ACTION] == GET_USERS:
                 users = database.get_all_users()
                 response = {
@@ -114,10 +116,10 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 response = {
                     ACTION: GET_CONTACTS,
                     RESPONSE: 200,
-                    MESSAGE_TEXT: ''
+                    MESSAGE_TEXT: contacts
                 }
-                for contact_name in contacts:
-                    response[MESSAGE_TEXT] += f'{contact_name}\n'
+                # for contact_name in contacts:
+                #     response[MESSAGE_TEXT] += f'{contact_name}\n'
                 send_message(client, response)
                 return
             elif message[ACTION] == ADD_CONTACT:
@@ -282,7 +284,7 @@ def main():
         server.start()
 
         server_app = QApplication(sys.argv)
-        main_window = MainWindow()
+        main_window = ServerMainWindow()
         main_window.statusBar().showMessage('Сервер запущен!')
         main_window.active_clients_table.setModel(create_active_clients_model(db))
         main_window.active_clients_table.resizeColumnsToContents()

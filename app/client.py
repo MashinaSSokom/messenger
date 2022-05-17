@@ -7,7 +7,9 @@ import logging
 import json
 import threading
 
-from common.variables import MESSAGE
+from PyQt5.QtWidgets import QApplication
+
+from client.transport import ClientTransport
 from logs import config_client_log
 from common.client_utils import create_presence, process_response, \
     receive_message_from_server, user_interface, load_users_from_server
@@ -15,7 +17,8 @@ from common.client_utils import create_presence, process_response, \
 from common.utils import argv_parser, get_message, send_message
 from common.errors import ReqFieldMissingError, ServerError
 from metaclasses import ClientVerifier
-from client_database import ClientStorage
+from client.client_database import ClientStorage
+from client.client_gui import ClientNameDialog, ClientMainWindow, AddContactDialog, DeleteContactDialog
 
 logger = logging.getLogger('client_logger')
 
@@ -101,11 +104,37 @@ def main():
     arguments = argv_parser()
     address = arguments['address']
     port = arguments['port']
-    client_name = arguments['client_name'] if arguments['client_name'] else input('Введите имя пользователя: ')
+    client_name = arguments['client_name']
+    client_app = QApplication(sys.argv)
+
+    if not client_name:
+        start_dialog = ClientNameDialog()
+        client_app.exec_()
+        if start_dialog.ok_pressed:
+            client_name = start_dialog.client_name.text()
+            del start_dialog
+        else:
+            exit(0)
+
     client_database = ClientStorage(client_name)
 
-    client = Client(address, port, client_name, client_database)
-    client.run()
+    try:
+        transport = ClientTransport(address, port, client_name, client_database)
+    except ServerError as e:
+        logger.error(f'Произошла ошибка подключения к серверу: {e}')
+        exit(1)
+
+    transport.setDaemon(True)
+    transport.start()
+
+    client_main_window = ClientMainWindow(client_database, transport)
+    client_main_window.make_connection(transport)
+    client_main_window.setWindowTitle(f'Messenger v1.0 - {client_name}')
+    # # client = Client(address, port, client_name, client_database)
+    client_app.exec_()
+
+    transport.shutdown()
+    transport.join()
 
 
 if __name__ == '__main__':
